@@ -1,0 +1,89 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the agency portal.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["client", "admin"] },
+        "onboardingComplete": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role", "onboardingComplete", "createdAt"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "A client's website project.",
+      "type": "object",
+      "properties": {
+        "clientId": { "type": "string" },
+        "businessName": { "type": "string" },
+        "tagline": { "type": "string" },
+        "primaryColor": { "type": "string" },
+        "fontPairing": { "type": "string" },
+        "domain": { "type": "string" },
+        "domainStatus": { "type": "string", "enum": ["pending", "connected", "none"] },
+        "liveUrl": { "type": "string" },
+        "stagingUrl": { "type": "string" },
+        "cmsUrl": { "type": "string" },
+        "vibe": { "type": "string" },
+        "status": { "type": "string", "enum": ["discovery", "design", "revisions", "launch", "live"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientId", "businessName", "status", "createdAt", "updatedAt"]
+    },
+    "Content": {
+      "title": "Content",
+      "description": "Website content for a project.",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string" },
+        "heroHeadline": { "type": "string" },
+        "heroSubheadline": { "type": "string" },
+        "aboutText": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "contactPhone": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["projectId", "updatedAt"]
+    },
+    "File": {
+      "title": "File",
+      "description": "A file uploaded by a client or admin.",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string" },
+        "uploaderId": { "type": "string" },
+        "name": { "type": "string" },
+        "url": { "type": "string" },
+        "category": { "type": "string" },
+        "size": { "type": "number" },
+        "type": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["projectId", "uploaderId", "name", "url", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles."
+    },
+    "/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "Client website projects."
+    },
+    "/content/{contentId}": {
+      "schema": { "$ref": "#/entities/Content" },
+      "description": "Website content linked to a project."
+    },
+    "/files/{fileId}": {
+      "schema": { "$ref": "#/entities/File" },
+      "description": "Uploaded files linked to a project."
+    }
+  }
+}
