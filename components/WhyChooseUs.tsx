@@ -5,27 +5,27 @@ import { CheckCircle2, TrendingUp, Zap, Users } from 'lucide-react';
 const reasons = [
   {
     title: "Conversion-First Design",
-    description: "We don't just make it pretty; we make it profitable. Our designs are psychologically engineered to guide users toward action.",
+    description: "We don't just make it pretty; we make it profitable. Our templates are psychologically engineered to guide users toward action.",
     icon: TrendingUp,
-    color: "from-cyan-400 to-blue-600"
+    color: "bg-[#0066cc]"
   },
   {
     title: "Blazing Fast Performance",
     description: "Speed is a feature. We optimize every line of code to ensure your site loads in under a second, boosting SEO and user retention.",
     icon: Zap,
-    color: "from-purple-400 to-pink-600"
+    color: "bg-[#5e5ce6]"
   },
   {
     title: "Bespoke Brand Identity",
-    description: "Stand out in a sea of templates. We build custom digital experiences that reflect your unique brand DNA and values.",
+    description: "Stand out in a sea of templates. Our advanced customization tools let you build digital experiences that reflect your unique brand DNA.",
     icon: CheckCircle2,
-    color: "from-magenta-400 to-purple-600"
+    color: "bg-[#ff375f]"
   },
   {
     title: "Strategic Partnership",
-    description: "We're not just a vendor; we're your digital growth partner. We provide ongoing support and data-driven insights to help you scale.",
+    description: "We're not just a tool; we're your digital growth partner. We provide ongoing support and data-driven insights to help you scale.",
     icon: Users,
-    color: "from-blue-400 to-cyan-600"
+    color: "bg-[#ffcc00]"
   }
 ];
 
@@ -38,40 +38,40 @@ const WhyChooseUs: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-sm font-bold text-brand-accent mb-6"
+            className="text-sm font-bold text-[#86868b] mb-4 tracking-wider uppercase"
           >
-            THE MILESTONE DIFFERENCE
+            The Platform Difference
           </motion.div>
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-5xl md:text-7xl font-bold text-brand-primary mb-8 leading-tight tracking-tight"
+            className="text-5xl md:text-7xl font-bold text-[#1d1d1f] mb-8 leading-tight tracking-tighter"
           >
-            WHY CHOOSE <br />
-            <span className="brand-gradient-text italic font-light">OUR AGENCY?</span>
+            Why choose <br />
+            our platform?
           </motion.h2>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 max-w-6xl mx-auto">
           {reasons.map((reason, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
+              initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="bg-gray-50 p-10 rounded-[3rem] flex flex-col md:flex-row gap-8 items-start group border border-gray-100 hover:border-brand-accent/30 hover:shadow-2xl hover:shadow-brand-accent/5 transition-all duration-500"
+              className="bg-[#f5f5f7] p-10 rounded-[2rem] flex flex-col md:flex-row gap-8 items-start group transition-all duration-500 hover:shadow-lg"
             >
-              <div className={`w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br ${reason.color} flex items-center justify-center shadow-lg shadow-black/5 group-hover:scale-110 transition-transform duration-500`}>
-                <reason.icon size={32} className="text-white" />
+              <div className={`w-14 h-14 shrink-0 rounded-2xl ${reason.color} flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-500`}>
+                <reason.icon size={24} className="text-white" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-brand-primary mb-4 tracking-tight group-hover:text-brand-accent transition-colors">
+                <h3 className="text-2xl font-bold text-[#1d1d1f] mb-3 tracking-tight">
                   {reason.title}
                 </h3>
-                <p className="text-brand-secondary leading-relaxed group-hover:text-brand-primary transition-colors">
+                <p className="text-[#86868b] leading-relaxed font-medium">
                   {reason.description}
                 </p>
               </div>
@@ -80,22 +80,22 @@ const WhyChooseUs: React.FC = () => {
         </div>
 
         {/* Visual Proof / Image Section */}
-        <div className="mt-32 grid md:grid-cols-2 gap-12 items-center">
+        <div className="mt-32 grid md:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="relative aspect-video rounded-[3rem] overflow-hidden border border-gray-100 shadow-2xl shadow-black/5"
+            className="relative aspect-square md:aspect-[4/3] rounded-[2rem] overflow-hidden border border-black/5 shadow-xl bg-[#f5f5f7]"
           >
             <img 
-              src="https://picsum.photos/seed/webdesign-modern/1200/800" 
-              alt="Web Design Example" 
-              className="w-full h-full object-cover opacity-80 grayscale hover:grayscale-0 transition-all duration-1000"
+              src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80" 
+              alt="Data Analytics Dashboard" 
+              className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-all duration-1000"
               referrerPolicy="no-referrer"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent flex flex-col justify-end p-10">
-              <div className="text-xs font-bold text-brand-accent mb-2">Case Study</div>
-              <div className="text-2xl font-bold text-brand-primary">Modern E-Commerce Platform</div>
+              <div className="text-xs font-bold text-[#0066cc] mb-2 uppercase tracking-wider">Success Story</div>
+              <div className="text-2xl font-bold text-[#1d1d1f] tracking-tight">Modern E-Commerce Platform</div>
             </div>
           </motion.div>
 
@@ -105,21 +105,21 @@ const WhyChooseUs: React.FC = () => {
             viewport={{ once: true }}
             className="space-y-8"
           >
-            <h3 className="text-4xl font-bold text-brand-primary tracking-tight leading-tight">
-              WE DON'T JUST BUILD WEBSITES. <br />
-              <span className="text-brand-secondary/30 italic font-light">WE BUILD GROWTH ENGINES.</span>
+            <h3 className="text-4xl md:text-5xl font-bold text-[#1d1d1f] tracking-tighter leading-tight">
+              Don't just build a website. <br />
+              <span className="text-[#86868b]">Build a growth engine.</span>
             </h3>
-            <p className="text-brand-secondary leading-relaxed text-lg">
-              Our clients see an average of 45% increase in conversion rates within the first 3 months of launching their new digital experience. We combine world-class design with cutting-edge technology to give you an unfair advantage.
+            <p className="text-[#86868b] leading-relaxed text-lg font-medium">
+              Our users see an average of 45% increase in conversion rates within the first 3 months of launching their new digital experience. We combine world-class design with cutting-edge technology to give you an unfair advantage.
             </p>
-            <div className="flex flex-wrap gap-4">
-              <div className="px-6 py-3 bg-gray-100 rounded-full text-xs font-bold text-brand-secondary">
+            <div className="flex flex-wrap gap-3">
+              <div className="px-5 py-2 bg-[#f5f5f7] rounded-full text-sm font-semibold text-[#1d1d1f]">
                 SEO Optimized
               </div>
-              <div className="px-6 py-3 bg-gray-100 rounded-full text-xs font-bold text-brand-secondary">
+              <div className="px-5 py-2 bg-[#f5f5f7] rounded-full text-sm font-semibold text-[#1d1d1f]">
                 Mobile First
               </div>
-              <div className="px-6 py-3 bg-gray-100 rounded-full text-xs font-bold text-brand-secondary">
+              <div className="px-5 py-2 bg-[#f5f5f7] rounded-full text-sm font-semibold text-[#1d1d1f]">
                 Fast Loading
               </div>
             </div>

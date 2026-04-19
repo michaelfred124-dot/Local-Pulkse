@@ -1,82 +1,66 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Facebook, Instagram, Linkedin, Rocket, Twitter } from 'lucide-react';
-import { generateImage } from '../src/services/imageService';
 
 const Footer: React.FC = () => {
-  const [bgImage, setBgImage] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchBg = async () => {
-      const img = await generateImage("Abstract luxury background for a footer, minimalist, sophisticated, clean white background, 4k.");
-      if (img) setBgImage(img);
-    };
-    fetchBg();
-  }, []);
-
   return (
-    <footer className="text-brand-secondary py-24 border-t border-gray-100 relative overflow-hidden bg-white">
-      {bgImage && (
-        <div className="absolute inset-0 opacity-5 pointer-events-none grayscale">
-          <img src={bgImage} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-        </div>
-      )}
+    <footer className="text-[#86868b] py-24 border-t border-black/5 relative overflow-hidden bg-white">
       <div className="container mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-16 mb-24">
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-12 md:gap-16 mb-24 max-w-6xl mx-auto">
           
-          <div className="md:col-span-5">
-            <a href="#" className="flex items-center gap-3 text-brand-primary mb-8 group">
-               <div className="w-10 h-10 brand-gradient-bg rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-transform shadow-lg shadow-brand-accent/20">
-                 <Rocket size={20} />
+          <div className="col-span-2 md:col-span-5">
+            <a href="#" className="flex items-center gap-2 text-[#1d1d1f] mb-8 group">
+               <div className="w-8 h-8 bg-[#1d1d1f] rounded-lg flex items-center justify-center text-white shadow-sm">
+                 <Rocket size={16} />
                </div>
-               <span className="text-3xl font-bold tracking-tight">MILESTONE <span className="italic font-light text-brand-secondary/40">DIGITAL</span></span>
+               <span className="text-xl font-bold tracking-tight">wollo</span>
             </a>
-            <p className="max-w-md text-lg leading-relaxed mb-10 text-brand-secondary">
-              We build digital experiences that define the standard for modern growth. Precision, elegance, and measurable results in every pixel.
+            <p className="max-w-sm text-sm leading-relaxed mb-10 font-medium">
+              The all-in-one platform for building, managing, and growing your digital presence.
             </p>
             <div className="flex gap-6">
-              <a href="#" className="text-brand-secondary/30 hover:text-brand-accent transition-colors"><Twitter size={20} /></a>
-              <a href="#" className="text-brand-secondary/30 hover:text-brand-accent transition-colors"><Instagram size={20} /></a>
-              <a href="#" className="text-brand-secondary/30 hover:text-brand-accent transition-colors"><Linkedin size={20} /></a>
-              <a href="#" className="text-brand-secondary/30 hover:text-brand-accent transition-colors"><Facebook size={20} /></a>
+              <a href="#" className="text-[#86868b] hover:text-[#1d1d1f] transition-colors"><Twitter size={20} /></a>
+              <a href="#" className="text-[#86868b] hover:text-[#1d1d1f] transition-colors"><Instagram size={20} /></a>
+              <a href="#" className="text-[#86868b] hover:text-[#1d1d1f] transition-colors"><Linkedin size={20} /></a>
+              <a href="#" className="text-[#86868b] hover:text-[#1d1d1f] transition-colors"><Facebook size={20} /></a>
             </div>
           </div>
 
-          <div className="md:col-span-2 md:col-start-7">
-            <h4 className="text-xs font-bold text-brand-primary mb-8">Company</h4>
-            <ul className="space-y-4 text-sm">
-              <li><a href="#" className="hover:text-brand-accent transition-colors">About Us</a></li>
-              <li><a href="#" className="hover:text-brand-accent transition-colors">Careers</a></li>
-              <li><a href="#" className="hover:text-brand-accent transition-colors">Blog</a></li>
-              <li><a href="#" className="hover:text-brand-accent transition-colors">Contact</a></li>
+          <div className="col-span-1 md:col-span-2 md:col-start-7">
+            <h4 className="text-xs font-bold text-[#1d1d1f] mb-6 tracking-wider uppercase">Company</h4>
+            <ul className="space-y-4 text-sm font-medium">
+              <li><a href="#" className="hover:text-[#1d1d1f] transition-colors">About Us</a></li>
+              <li><a href="#" className="hover:text-[#1d1d1f] transition-colors">Careers</a></li>
+              <li><a href="#" className="hover:text-[#1d1d1f] transition-colors">Blog</a></li>
+              <li><a href="#" className="hover:text-[#1d1d1f] transition-colors">Contact</a></li>
             </ul>
           </div>
 
-          <div className="md:col-span-2">
-            <h4 className="text-xs font-bold text-brand-primary mb-8">Services</h4>
-            <ul className="space-y-4 text-sm">
-              <li><a href="#" className="hover:text-brand-accent transition-colors">Web Design</a></li>
-              <li><a href="#" className="hover:text-brand-accent transition-colors">Development</a></li>
-              <li><a href="#" className="hover:text-brand-accent transition-colors">SEO Strategy</a></li>
-              <li><a href="#" className="hover:text-brand-accent transition-colors">Brand Identity</a></li>
+          <div className="col-span-1 md:col-span-2">
+            <h4 className="text-xs font-bold text-[#1d1d1f] mb-6 tracking-wider uppercase">Platform</h4>
+            <ul className="space-y-4 text-sm font-medium">
+              <li><a href="#" className="hover:text-[#1d1d1f] transition-colors">Templates</a></li>
+              <li><a href="#" className="hover:text-[#1d1d1f] transition-colors">Features</a></li>
+              <li><a href="#" className="hover:text-[#1d1d1f] transition-colors">Pricing</a></li>
+              <li><a href="#" className="hover:text-[#1d1d1f] transition-colors">Integrations</a></li>
             </ul>
           </div>
 
-          <div className="md:col-span-2">
-            <h4 className="text-xs font-bold text-brand-primary mb-8">Legal</h4>
-            <ul className="space-y-4 text-sm">
-              <li><a href="#" className="hover:text-brand-accent transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-brand-accent transition-colors">Terms of Service</a></li>
-              <li><a href="#" className="hover:text-brand-accent transition-colors">Cookie Policy</a></li>
+          <div className="col-span-1 md:col-span-2">
+            <h4 className="text-xs font-bold text-[#1d1d1f] mb-6 tracking-wider uppercase">Legal</h4>
+            <ul className="space-y-4 text-sm font-medium">
+              <li><a href="#" className="hover:text-[#1d1d1f] transition-colors">Privacy Policy</a></li>
+              <li><a href="#" className="hover:text-[#1d1d1f] transition-colors">Terms of Service</a></li>
+              <li><a href="#" className="hover:text-[#1d1d1f] transition-colors">Cookie Policy</a></li>
             </ul>
           </div>
 
         </div>
         
-        <div className="border-t border-gray-100 pt-12 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="text-xs font-bold text-brand-secondary/40">
-            &copy; {new Date().getFullYear()} Milestone Digital. All rights reserved.
+        <div className="border-t border-black/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 max-w-6xl mx-auto">
+          <div className="text-xs font-medium text-[#86868b]">
+            &copy; {new Date().getFullYear()} Wollo. All rights reserved.
           </div>
-          <div className="text-xs font-bold text-brand-secondary/20">
+          <div className="text-xs font-medium text-[#86868b]">
             Designed with precision for the modern web.
           </div>
         </div>

@@ -7,18 +7,16 @@ import {
   MoreVertical, Send, Paperclip, Shield, User, Lock, Mail,
   CreditCard as CardIcon, ChevronLeft, Check, Server, Zap, Database,
   Circle, ArrowRight, UploadCloud, Palette, FileType2, Eye, EyeOff, Key,
-  FileSignature, Receipt, FileCheck, X, Printer, Globe, Layout, Rocket, Edit3, Save, Plus, Loader2
+  FileSignature, Receipt, FileCheck, X, Printer, Globe, Layout, Rocket, Edit3, Save, Plus, Loader2, ExternalLink
 } from 'lucide-react';
 import { Page, PortfolioItem } from '../types';
 import { dataManager } from '../services/mockData';
-import { ZenYoga } from './templates/ZenYoga';
-import { LegalLink } from './templates/LegalLink';
-import { UrbanFit } from './templates/UrbanFit';
-import { ArtisanBakery } from './templates/ArtisanBakery';
-import { ModernDental } from './templates/ModernDental';
-import { SparkleClean } from './templates/SparkleClean';
-import { PetParadise } from './templates/PetParadise';
+import { IframeTemplate } from './templates/IframeTemplate';
 import { DefaultTemplate } from './templates/DefaultTemplate';
+import { TemplateRenderer } from './TemplateRenderer';
+import { TemplateEditor } from './TemplateEditor';
+import { VisualBuilder } from '../src/builder/VisualBuilder';
+import { PRESET_TEMPLATES } from '../src/builder/templates';
 import { useAuth } from './AuthContext';
 import { OnboardingWizard } from './OnboardingWizard';
 import { db, storage, handleFirestoreError, OperationType } from '../firebase';
@@ -33,6 +31,7 @@ interface DashboardProps {
   hasMaintenance: boolean;
   projectId: string;
   onBack: () => void;
+  initialTab?: string;
 }
 
 // ... existing constants ...
@@ -103,36 +102,47 @@ const PROJECT_PLANS = [
   }
 ];
 
-export const ProjectEditor: React.FC<DashboardProps> = ({ onNavigate, onPreview, selectedPlanId, onPlanChange, hasMaintenance, projectId, onBack }) => {
+export const ProjectEditor: React.FC<DashboardProps> = ({ onNavigate, onPreview, selectedPlanId, onPlanChange, hasMaintenance, projectId, onBack, initialTab }) => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(initialTab || 'overview');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState('profile');
   const [notifications, setNotifications] = useState({ email: true, push: false, updates: true });
   const [showPassword, setShowPassword] = useState(false);
   const [viewingDoc, setViewingDoc] = useState<{title: string, type: 'contract' | 'proposal'} | null>(null);
-  const [activeEditorSection, setActiveEditorSection] = useState<string | null>('hero');
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const editorImageInputRef = React.useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
   // Real data state
   const [userProject, setUserProject] = useState<any>(null);
   const [editorContent, setEditorContent] = useState<any>({
     heroHeadline: 'We build digital experiences',
     heroSubheadline: 'Transform your brand with our cutting-edge web solutions.',
-    heroImage: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80',
+    heroImage: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&q=80',
     aboutText: 'We are a team of passionate designers and developers dedicated to creating beautiful, functional websites that drive results.',
     contactEmail: 'hello@yourbrand.com',
-    contactPhone: '+1 (555) 123-4567'
+    contactPhone: '+1 (555) 123-4567',
+    builderSchema: null
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [domainInput, setDomainInput] = useState('');
   const [isConnectingDomain, setIsConnectingDomain] = useState(false);
+  const [domainSearch, setDomainSearch] = useState('');
+  const [isSearchingDomain, setIsSearchingDomain] = useState(false);
+  const [searchResults, setSearchResults] = useState<{domain: string, price: string, available: boolean}[]>([]);
+  const [isBuyingDomain, setIsBuyingDomain] = useState<string | null>(null);
+  const [editorMode, setEditorMode] = useState<'simple' | 'advanced'>('simple');
 
   // Fetch real user project
   useEffect(() => {
@@ -172,7 +182,7 @@ export const ProjectEditor: React.FC<DashboardProps> = ({ onNavigate, onPreview,
 
   // Fetch content for project
   useEffect(() => {
-    if (!userProject) return; // Only fetch for valid projects
+    if (!userProject?.id) return; // Only fetch for valid projects
     const q = query(collection(db, 'content'), where('projectId', '==', userProject.id));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       if (!snapshot.empty) {
@@ -182,10 +192,10 @@ export const ProjectEditor: React.FC<DashboardProps> = ({ onNavigate, onPreview,
       handleFirestoreError(error, OperationType.LIST, 'content');
     });
     return () => unsubscribe();
-  }, [userProject]);
+  }, [userProject?.id]);
 
   useEffect(() => {
-    if (!user || !userProject) return;
+    if (!user || !userProject?.id) return;
     
     const q = query(
       collection(db, 'files'),
@@ -209,7 +219,7 @@ export const ProjectEditor: React.FC<DashboardProps> = ({ onNavigate, onPreview,
     });
 
     return () => unsubscribe();
-  }, [user, userProject]);
+  }, [user, userProject?.id]);
 
   const handleContentChange = (field: string, value: string) => {
     setEditorContent((prev: any) => ({ ...prev, [field]: value }));
@@ -274,6 +284,48 @@ export const ProjectEditor: React.FC<DashboardProps> = ({ onNavigate, onPreview,
     }
   };
 
+  const handleSearchDomain = async () => {
+    if (!domainSearch) return;
+    setIsSearchingDomain(true);
+    // Simulate domain search API call
+    setTimeout(() => {
+      const extensions = ['.com', '.net', '.org', '.io', '.app'];
+      const results = extensions.map(ext => ({
+        domain: domainSearch.split('.')[0] + ext,
+        price: ext === '.io' || ext === '.app' ? '29.99' : '14.99',
+        available: Math.random() > 0.3
+      }));
+      setSearchResults(results);
+      setIsSearchingDomain(false);
+    }, 1500);
+  };
+
+  const handleBuyDomain = async (domain: string, price: string) => {
+    if (!userProject) return;
+    setIsBuyingDomain(domain);
+    try {
+      // Simulate payment and registration
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      await updateDoc(doc(db, 'projects', userProject.id), {
+        domain: domain,
+        domainStatus: 'verified',
+        domainType: 'purchased',
+        domainPrice: price,
+        updatedAt: new Date().toISOString()
+      });
+      
+      setSearchResults([]);
+      setDomainSearch('');
+      alert(`Domain ${domain} has been successfully purchased and connected to your site!`);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `projects/${userProject.id}`);
+      alert("Failed to purchase domain.");
+    } finally {
+      setIsBuyingDomain(null);
+    }
+  };
+
   const handlePublishWebsite = async () => {
     if (!userProject) {
       alert("No project selected.");
@@ -309,7 +361,7 @@ export const ProjectEditor: React.FC<DashboardProps> = ({ onNavigate, onPreview,
               setProjectStatus(userProject.status === 'discovery' || userProject.status === 'Lead' ? 'setup' : 'active');
           }
       }
-  }, [userProject]);
+  }, [userProject?.status]);
 
   const [onboardingSteps, setOnboardingSteps] = useState([
     { id: 'brief', label: 'Project Brief Submitted', completed: true, type: 'info' },
@@ -510,7 +562,7 @@ export const ProjectEditor: React.FC<DashboardProps> = ({ onNavigate, onPreview,
     id: 999,
     title: userProject.name || 'Your Brand',
     category: userProject.clientName || 'Industry',
-    imageUrl: editorContent.heroImage || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80',
+    imageUrl: editorContent.heroImage || 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&q=80',
     heroHeadline: editorContent.heroHeadline,
     heroSubheadline: editorContent.heroSubheadline,
     aboutText: editorContent.aboutText,
@@ -540,29 +592,16 @@ export const ProjectEditor: React.FC<DashboardProps> = ({ onNavigate, onPreview,
   const renderPreviewTemplate = () => {
     if (!previewItem) return null;
     
-    // Check for templateId first (new system)
-    if (userProject?.templateId) {
-      switch(userProject.templateId) {
-        case 'bakery': return <ArtisanBakery content={previewItem} />;
-        case 'dental': return <ModernDental content={previewItem} />;
-        case 'cleaning': return <SparkleClean content={previewItem} />;
-        case 'pet': return <PetParadise content={previewItem} />;
-        case 'legal': return <LegalLink item={previewItem} />;
-        case 'yoga': return <ZenYoga item={previewItem} />;
-        default: break; // Fall back to vibe if templateId is unknown
-      }
-    }
-
-    // Fallback to vibe (old system)
-    if (!userProject?.vibe) return <DefaultTemplate item={previewItem} />;
-    
-    switch(userProject.vibe) {
-      case 'organic': return <ZenYoga item={previewItem} />;
-      case 'utility': return <LegalLink item={previewItem} />;
-      case 'brutalist': return <UrbanFit item={previewItem} />;
-      case 'tech': return <DefaultTemplate item={previewItem} />;
-      default: return <DefaultTemplate item={previewItem} />;
-    }
+    return (
+      <TemplateRenderer 
+        item={previewItem} 
+        isEditing={true} 
+        onUpdate={(updates) => {
+          // Handle updates if needed, though usually handled via the editor forms
+          console.log('Preview update:', updates);
+        }}
+      />
+    );
   };
 
   const renderContent = () => {
@@ -1049,225 +1088,72 @@ export const ProjectEditor: React.FC<DashboardProps> = ({ onNavigate, onPreview,
         return (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-[calc(100vh-120px)] flex flex-col">
              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6 shrink-0">
-                <div>
-                   <h2 className="text-lg sm:text-2xl font-bold text-brand-primary">Live Website Editor</h2>
-                   <p className="text-[10px] sm:text-base text-brand-secondary/50">Update your content and see changes instantly.</p>
-                </div>
-                <button 
-                  onClick={saveContentToFirestore}
-                  disabled={isSaving}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 brand-gradient-bg text-white text-xs sm:text-base font-bold rounded-lg sm:rounded-xl hover:opacity-90 transition-colors shadow-lg shadow-brand-accent/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSaving ? <Loader2 size={14} className="animate-spin sm:w-[18px] sm:h-[18px]" /> : <Save size={14} className="sm:w-[18px] sm:h-[18px]" />}
-                  {isSaving ? 'Saving...' : 'Publish Changes'}
-                </button>
-             </div>
-
-             <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
-                {/* Editor Controls (Left) */}
-                <div className="lg:col-span-4 flex flex-col glass-card rounded-2xl sm:rounded-[2rem] border-black/5 shadow-xl shadow-black/5 overflow-hidden h-full">
-                   <div className="p-4 border-b border-black/5 bg-black/5 font-bold text-brand-primary flex items-center gap-2">
-                      <Edit3 size={18} className="text-brand-accent" /> Content Editor
+                <div className="flex items-center gap-6">
+                   <div>
+                      <h2 className="text-lg sm:text-2xl font-bold text-brand-primary">Live Website Editor</h2>
+                      <p className="text-[10px] sm:text-base text-brand-secondary/50">Update your content and see changes instantly.</p>
                    </div>
-                   <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                      {/* Hero Section */}
-                      <div className="border border-black/5 rounded-xl overflow-hidden bg-black/5">
-                         <button 
-                           onClick={() => setActiveEditorSection(activeEditorSection === 'hero' ? null : 'hero')}
-                           className="w-full flex items-center justify-between p-4 bg-black/5 hover:bg-black/10 transition-colors"
-                         >
-                            <h3 className="font-bold text-brand-primary text-sm flex items-center gap-2">
-                              <Layout size={16} className="text-brand-accent" />
-                              Hero Section
-                            </h3>
-                            <ChevronRight size={16} className={`text-brand-secondary/40 transition-transform ${activeEditorSection === 'hero' ? 'rotate-90' : ''}`} />
-                         </button>
-                         
-                         <AnimatePresence>
-                            {activeEditorSection === 'hero' && (
-                              <motion.div 
-                                initial={{ height: 0 }}
-                                animate={{ height: 'auto' }}
-                                exit={{ height: 0 }}
-                                className="overflow-hidden bg-black/20"
-                              >
-                                <div className="p-4 space-y-4 border-t border-white/10">
-                                   <div>
-                                      <label className="block text-xs font-bold text-brand-secondary/60 mb-1 uppercase tracking-wider">Headline</label>
-                                      <input 
-                                        type="text" 
-                                        value={editorContent.heroHeadline || ''}
-                                        onChange={(e) => handleContentChange('heroHeadline', e.target.value)}
-                                        className="w-full px-3 py-2 bg-black/5 border border-black/5 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition-all text-sm text-brand-primary"
-                                      />
-                                   </div>
-                                   <div>
-                                      <label className="block text-xs font-bold text-brand-secondary/60 mb-1 uppercase tracking-wider">Subheadline</label>
-                                      <textarea 
-                                        rows={3}
-                                        value={editorContent.heroSubheadline || ''}
-                                        onChange={(e) => handleContentChange('heroSubheadline', e.target.value)}
-                                        className="w-full px-3 py-2 bg-black/5 border border-black/5 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition-all resize-none text-sm text-brand-primary"
-                                      />
-                                   </div>
-                                   <div>
-                                      <label className="block text-xs font-bold text-brand-secondary/60 mb-1 uppercase tracking-wider">Hero Image</label>
-                                      <input 
-                                        type="file" 
-                                        ref={editorImageInputRef}
-                                        onChange={handleEditorImageUpload}
-                                        className="hidden" 
-                                        accept="image/*"
-                                      />
-                                      <div 
-                                        onClick={() => editorImageInputRef.current?.click()}
-                                        className="relative aspect-video border-2 border-dashed border-black/5 rounded-lg overflow-hidden hover:bg-black/5 transition-colors cursor-pointer flex flex-col items-center justify-center gap-2"
-                                      >
-                                         {editorContent.heroImage ? (
-                                            <>
-                                              <img src={editorContent.heroImage} className="absolute inset-0 w-full h-full object-cover" alt="Hero" />
-                                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                                <Upload className="text-white" size={20} />
-                                              </div>
-                                            </>
-                                         ) : (
-                                            <>
-                                              <Image size={20} className="text-brand-secondary/40" />
-                                              <p className="text-[10px] font-bold text-brand-secondary/50">Tap to upload</p>
-                                            </>
-                                         )}
-                                         
-                                         {isUploading && (
-                                            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center p-2">
-                                              <Loader2 className="animate-spin text-brand-accent mb-1" size={16} />
-                                              <div className="w-full bg-slate-200 h-1 rounded-full overflow-hidden">
-                                                <div className="bg-brand-accent h-full transition-all" style={{ width: `${uploadProgress}%` }}></div>
-                                              </div>
-                                            </div>
-                                         )}
-                                      </div>
-                                   </div>
-                                </div>
-                              </motion.div>
-                            )}
-                         </AnimatePresence>
-                      </div>
-
-                      {/* About Section */}
-                      <div className="border border-black/5 rounded-xl overflow-hidden bg-black/5">
-                         <button 
-                           onClick={() => setActiveEditorSection(activeEditorSection === 'about' ? null : 'about')}
-                           className="w-full flex items-center justify-between p-4 bg-black/5 hover:bg-black/10 transition-colors"
-                         >
-                            <h3 className="font-bold text-brand-primary text-sm flex items-center gap-2">
-                              <FileText size={16} className="text-brand-accent" />
-                              About Section
-                            </h3>
-                            <ChevronRight size={16} className={`text-brand-secondary/40 transition-transform ${activeEditorSection === 'about' ? 'rotate-90' : ''}`} />
-                         </button>
-
-                         <AnimatePresence>
-                            {activeEditorSection === 'about' && (
-                              <motion.div 
-                                initial={{ height: 0 }}
-                                animate={{ height: 'auto' }}
-                                exit={{ height: 0 }}
-                                className="overflow-hidden bg-black/5"
-                              >
-                                <div className="p-4 space-y-4 border-t border-black/5">
-                                   <div>
-                                      <label className="block text-xs font-bold text-brand-secondary/60 mb-1 uppercase tracking-wider">About Us Text</label>
-                                      <textarea 
-                                        rows={4}
-                                        value={editorContent.aboutText || ''}
-                                        onChange={(e) => handleContentChange('aboutText', e.target.value)}
-                                        className="w-full px-3 py-2 bg-black/5 border border-black/5 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition-all resize-none text-sm text-brand-primary"
-                                      />
-                                   </div>
-                                </div>
-                              </motion.div>
-                            )}
-                         </AnimatePresence>
-                      </div>
-
-                      {/* Contact Info */}
-                      <div className="border border-black/5 rounded-xl overflow-hidden bg-black/5">
-                         <button 
-                           onClick={() => setActiveEditorSection(activeEditorSection === 'contact' ? null : 'contact')}
-                           className="w-full flex items-center justify-between p-4 bg-black/5 hover:bg-black/10 transition-colors"
-                         >
-                            <h3 className="font-bold text-brand-primary text-sm flex items-center gap-2">
-                              <Mail size={16} className="text-brand-accent" />
-                              Contact Info
-                            </h3>
-                            <ChevronRight size={16} className={`text-brand-secondary/40 transition-transform ${activeEditorSection === 'contact' ? 'rotate-90' : ''}`} />
-                         </button>
-
-                         <AnimatePresence>
-                            {activeEditorSection === 'contact' && (
-                              <motion.div 
-                                initial={{ height: 0 }}
-                                animate={{ height: 'auto' }}
-                                exit={{ height: 0 }}
-                                className="overflow-hidden bg-black/5"
-                              >
-                                <div className="p-4 space-y-4 border-t border-black/5">
-                                   <div>
-                                      <label className="block text-xs font-bold text-brand-secondary/60 mb-1 uppercase tracking-wider">Email</label>
-                                      <input 
-                                        type="email" 
-                                        value={editorContent.contactEmail || ''}
-                                        onChange={(e) => handleContentChange('contactEmail', e.target.value)}
-                                        className="w-full px-3 py-2 bg-black/5 border border-black/5 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition-all text-sm text-brand-primary"
-                                      />
-                                   </div>
-                                   <div>
-                                      <label className="block text-xs font-bold text-brand-secondary/60 mb-1 uppercase tracking-wider">Phone</label>
-                                      <input 
-                                        type="tel" 
-                                        value={editorContent.contactPhone || ''}
-                                        onChange={(e) => handleContentChange('contactPhone', e.target.value)}
-                                        className="w-full px-3 py-2 bg-black/5 border border-black/5 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition-all text-sm text-brand-primary"
-                                      />
-                                   </div>
-                                </div>
-                              </motion.div>
-                            )}
-                         </AnimatePresence>
-                      </div>
-                   </div>
-                </div>
-
-                {/* Live Preview (Right) */}
-                <div className="lg:col-span-8 bg-black/20 rounded-2xl sm:rounded-[2rem] border border-black/5 shadow-inner overflow-hidden flex flex-col h-full relative">
-                   <div className="bg-black/40 px-4 py-3 flex items-center justify-between shrink-0">
-                      <div className="flex items-center gap-2">
-                         <div className="flex gap-1.5">
-                            <div className="w-3 h-3 rounded-full bg-red-500/50"></div>
-                            <div className="w-3 h-3 rounded-full bg-yellow-500/50"></div>
-                            <div className="w-3 h-3 rounded-full bg-green-500/50"></div>
-                         </div>
-                         <div className="mx-auto bg-black/20 text-brand-secondary/60 text-xs px-4 py-1 rounded-full font-mono flex items-center gap-2">
-                            <Lock size={10} /> mybusiness.com
-                         </div>
-                      </div>
+                   <div className="hidden md:flex bg-gray-100 p-1 rounded-xl border border-black/5">
                       <button 
-                         onClick={() => userProject?.id && onPreview(userProject.id)}
-                         className="text-brand-secondary/60 hover:text-brand-primary text-[10px] font-bold flex items-center gap-2 bg-black/20 px-3 py-1 rounded-lg transition-colors"
+                        onClick={() => setEditorMode('simple')}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${editorMode === 'simple' ? 'bg-white shadow-sm text-brand-accent' : 'text-gray-400 hover:text-gray-900'}`}
                       >
-                         <Eye size={12} /> Full Preview
+                         Simple
+                      </button>
+                      <button 
+                        onClick={() => {
+                          if (!editorContent.builderSchema) {
+                            setEditorContent(prev => ({ 
+                              ...prev, 
+                              builderSchema: PRESET_TEMPLATES[0] 
+                            }));
+                          }
+                          setEditorMode('advanced');
+                        }}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${editorMode === 'advanced' ? 'bg-white shadow-sm text-brand-accent' : 'text-gray-400 hover:text-gray-900'}`}
+                      >
+                         Advanced (Visual Builder)
                       </button>
                    </div>
-                   <div className="flex-1 overflow-y-auto bg-white relative">
-                      {/* Scale down the template to fit as a preview */}
-                      <div className="origin-top-left scale-[0.8] w-[125%] pointer-events-none">
-                         {renderPreviewTemplate()}
-                      </div>
-                      
-                      {/* Overlay to prevent interaction in preview mode */}
-                      <div className="absolute inset-0 z-50 bg-transparent"></div>
-                   </div>
                 </div>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                   <button 
+                     onClick={saveContentToFirestore}
+                     disabled={isSaving}
+                     className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 brand-gradient-bg text-white text-xs sm:text-base font-bold rounded-lg sm:rounded-xl hover:opacity-90 transition-colors shadow-lg shadow-brand-accent/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                   >
+                      {isSaving ? <Loader2 size={14} className="animate-spin sm:w-[18px] sm:h-[18px]" /> : <Save size={14} className="sm:w-[18px] sm:h-[18px]" />}
+                      {isSaving ? 'Saving...' : 'Publish Changes'}
+                   </button>
+                </div>
+             </div>
+
+             <div className="flex-1 min-h-0 bg-white rounded-2xl sm:rounded-[2rem] border border-black/5 shadow-xl shadow-black/5 overflow-hidden relative">
+                {editorMode === 'simple' ? (
+                  <TemplateEditor 
+                    item={{
+                      id: userProject?.id || 0,
+                      templateId: userProject?.templateId || 'default',
+                      title: userProject?.name || 'Your Brand',
+                      category: userProject?.industry || 'Business',
+                      imageUrl: editorContent.heroImage || userProject?.heroImage,
+                      heroHeadline: editorContent.heroHeadline,
+                      heroSubheadline: editorContent.heroSubheadline,
+                      aboutText: editorContent.aboutText,
+                      servicesText: editorContent.servicesText,
+                      logo: editorContent.logo,
+                      location: editorContent.location,
+                      contactEmail: editorContent.contactEmail,
+                      contactPhone: editorContent.contactPhone
+                    } as PortfolioItem}
+                    onUpdate={(updates) => setEditorContent(prev => ({ ...prev, ...updates }))}
+                  />
+                ) : (
+                  <VisualBuilder 
+                    initialSchema={editorContent.builderSchema}
+                    onChange={(schema) => setEditorContent(prev => ({ ...prev, builderSchema: schema }))}
+                  />
+                )}
              </div>
           </div>
         );
@@ -1703,127 +1589,248 @@ export const ProjectEditor: React.FC<DashboardProps> = ({ onNavigate, onPreview,
       case 'launch':
          return (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-               <div className="mb-6 sm:mb-8">
-                  <h2 className="text-2xl font-bold text-brand-primary">Launch & Domain</h2>
-                  <p className="text-brand-secondary/50">Connect your domain and go live.</p>
+               <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                     <h2 className="text-2xl font-bold text-brand-primary">Launch & Domain</h2>
+                     <p className="text-brand-secondary/50">Connect your domain and go live.</p>
+                  </div>
+                  {userProject?.status === 'live' && (
+                     <div className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-full border border-green-100">
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                        <span className="text-sm font-bold">Site is Live</span>
+                     </div>
+                  )}
                </div>
 
-               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Domain Connection */}
-                  <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden">
-                     <div className="p-6 sm:p-8 border-b border-slate-100">
-                        <div className="w-12 h-12 bg-brand-accent/10 text-brand-accent rounded-xl flex items-center justify-center mb-4">
-                           <Globe size={24} />
-                        </div>
-                        <h3 className="font-bold text-lg text-brand-primary mb-2">Connect Your Domain</h3>
-                        <p className="text-sm text-brand-secondary/50 mb-6">Link your custom domain to your new website. We'll handle the SSL certificate automatically.</p>
-                        
-                        <div className="space-y-4">
-                           <div>
-                              <label className="block text-sm font-bold text-slate-700 mb-2">Your Domain Name</label>
-                               <div className="flex gap-2">
-                                 <input 
-                                    type="text" 
-                                    placeholder="e.g. mybusiness.com" 
-                                    value={domainInput}
-                                    onChange={(e) => setDomainInput(e.target.value)}
-                                    className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-accent/10 focus:border-brand-accent outline-none transition-all text-brand-primary placeholder:text-slate-300"
-                                 />
-                                 <button 
-                                    onClick={handleConnectDomain}
-                                    disabled={!domainInput || isConnectingDomain}
-                                    className="px-6 py-3 bg-brand-accent text-white font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-brand-accent/20"
-                                 >
-                                    {isConnectingDomain ? <Clock size={16} className="animate-spin" /> : null}
-                                    {isConnectingDomain ? 'Connecting...' : 'Connect'}
-                                 </button>
-                              </div>
-                              {userProject?.domain && (
-                                 <div className="mt-4 p-3 bg-brand-accent/5 border border-brand-accent/10 rounded-lg flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                       <Globe size={16} className="text-brand-accent" />
-                                       <span className="text-sm font-medium text-brand-primary">{userProject.domain}</span>
-                                    </div>
-                                    <span className="text-xs font-bold px-2 py-1 bg-brand-accent/10 text-brand-accent rounded-full uppercase tracking-wider">
-                                       {userProject.domainStatus || 'Pending'}
-                                    </span>
-                                 </div>
-                              )}
+               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left Column: Domain Management */}
+                  <div className="lg:col-span-2 space-y-6">
+                     {/* Buy a Domain */}
+                     <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden">
+                        <div className="p-6 sm:p-8 border-b border-slate-100">
+                           <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mb-4">
+                              <Search size={24} />
                            </div>
+                           <h3 className="font-bold text-lg text-brand-primary mb-2">Buy a New Domain</h3>
+                           <p className="text-sm text-brand-secondary/50 mb-6">Find the perfect name for your business. We'll handle all the technical setup.</p>
+                           
+                           <div className="flex gap-2">
+                              <input 
+                                 type="text" 
+                                 placeholder="search for a domain..." 
+                                 value={domainSearch}
+                                 onChange={(e) => setDomainSearch(e.target.value)}
+                                 onKeyDown={(e) => e.key === 'Enter' && handleSearchDomain()}
+                                 className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-accent/10 focus:border-brand-accent outline-none transition-all text-brand-primary placeholder:text-slate-300"
+                              />
+                              <button 
+                                 onClick={handleSearchDomain}
+                                 disabled={!domainSearch || isSearchingDomain}
+                                 className="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-all disabled:opacity-50 flex items-center gap-2 shadow-lg"
+                              >
+                                 {isSearchingDomain ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+                                 Search
+                              </button>
+                           </div>
+
+                           {searchResults.length > 0 && (
+                              <div className="mt-6 space-y-2">
+                                 {searchResults.map((res) => (
+                                    <div key={res.domain} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-brand-accent/30 transition-all group">
+                                       <div>
+                                          <span className="font-bold text-brand-primary">{res.domain}</span>
+                                          {!res.available && <span className="ml-2 text-[10px] font-bold text-red-500 uppercase">Taken</span>}
+                                       </div>
+                                       <div className="flex items-center gap-4">
+                                          <span className="text-sm font-bold text-slate-500">${res.price}/yr</span>
+                                          <button 
+                                             onClick={() => handleBuyDomain(res.domain, res.price)}
+                                             disabled={!res.available || isBuyingDomain !== null}
+                                             className={`px-4 py-2 rounded-lg font-bold text-xs transition-all ${
+                                                res.available 
+                                                ? 'bg-brand-accent text-white hover:opacity-90 shadow-md shadow-brand-accent/10' 
+                                                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                             }`}
+                                          >
+                                             {isBuyingDomain === res.domain ? <Loader2 size={14} className="animate-spin" /> : 'Buy Now'}
+                                          </button>
+                                       </div>
+                                    </div>
+                                 ))}
+                              </div>
+                           )}
                         </div>
                      </div>
-                     <div className="p-6 sm:p-8 bg-slate-50">
-                        <h4 className="font-bold text-sm text-brand-primary mb-4">DNS Configuration</h4>
-                        <p className="text-sm text-brand-secondary/50 mb-4">Add these records to your domain registrar (e.g., GoDaddy, Namecheap).</p>
-                        
-                        <div className="space-y-3">
-                           <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between shadow-sm">
-                              <div>
-                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Type</span>
-                                 <span className="font-mono text-sm font-bold text-brand-primary">A Record</span>
+
+                     {/* Connect Existing Domain */}
+                     <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden">
+                        <div className="p-6 sm:p-8 border-b border-slate-100">
+                           <div className="w-12 h-12 bg-brand-accent/10 text-brand-accent rounded-xl flex items-center justify-center mb-4">
+                              <Globe size={24} />
+                           </div>
+                           <h3 className="font-bold text-lg text-brand-primary mb-2">Connect Existing Domain</h3>
+                           <p className="text-sm text-brand-secondary/50 mb-6">Already own a domain? Link it here and configure your DNS settings.</p>
+                           
+                           <div className="flex gap-2">
+                              <input 
+                                 type="text" 
+                                 placeholder="e.g. mybusiness.com" 
+                                 value={domainInput}
+                                 onChange={(e) => setDomainInput(e.target.value)}
+                                 className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-accent/10 focus:border-brand-accent outline-none transition-all text-brand-primary placeholder:text-slate-300"
+                              />
+                              <button 
+                                 onClick={handleConnectDomain}
+                                 disabled={!domainInput || isConnectingDomain}
+                                 className="px-6 py-3 bg-brand-accent text-white font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-brand-accent/20"
+                              >
+                                 {isConnectingDomain ? <Loader2 size={16} className="animate-spin" /> : null}
+                                 Connect
+                              </button>
+                           </div>
+
+                           {userProject?.domain && (
+                              <div className="mt-4 p-4 bg-brand-accent/5 border border-brand-accent/10 rounded-xl flex items-center justify-between">
+                                 <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm">
+                                       <Globe size={16} className="text-brand-accent" />
+                                    </div>
+                                    <div>
+                                       <span className="text-sm font-bold text-brand-primary block">{userProject.domain}</span>
+                                       <span className="text-[10px] text-brand-secondary/50 uppercase font-bold tracking-wider">
+                                          {userProject.domainType === 'purchased' ? 'Managed by us' : 'External Domain'}
+                                       </span>
+                                    </div>
+                                 </div>
+                                 <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
+                                    userProject.domainStatus === 'verified' 
+                                    ? 'bg-green-100 text-green-700' 
+                                    : 'bg-orange-100 text-orange-700'
+                                 }`}>
+                                    {userProject.domainStatus || 'Pending'}
+                                 </span>
                               </div>
-                              <div>
-                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Name</span>
-                                 <span className="font-mono text-sm text-brand-primary">@</span>
+                           )}
+                        </div>
+
+                        {userProject?.domain && userProject.domainType !== 'purchased' && (
+                           <div className="p-6 sm:p-8 bg-slate-50">
+                              <div className="flex items-center justify-between mb-4">
+                                 <h4 className="font-bold text-sm text-brand-primary">DNS Configuration</h4>
+                                 <button className="text-[10px] font-bold text-brand-accent hover:underline uppercase tracking-wider">Copy All</button>
                               </div>
-                              <div>
-                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Value</span>
-                                 <span className="font-mono text-sm text-brand-primary">76.76.21.21</span>
+                              <p className="text-xs text-brand-secondary/50 mb-4 italic">Add these records to your domain registrar (e.g., GoDaddy, Namecheap) to verify ownership.</p>
+                              
+                              <div className="space-y-3">
+                                 <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between shadow-sm group hover:border-brand-accent/30 transition-all">
+                                    <div className="w-1/4">
+                                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Type</span>
+                                       <span className="font-mono text-xs font-bold text-brand-primary">A</span>
+                                    </div>
+                                    <div className="w-1/4">
+                                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Name</span>
+                                       <span className="font-mono text-xs text-brand-primary">@</span>
+                                    </div>
+                                    <div className="flex-1">
+                                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Value</span>
+                                       <span className="font-mono text-xs text-brand-primary">76.76.21.21</span>
+                                    </div>
+                                 </div>
+                                 <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between shadow-sm group hover:border-brand-accent/30 transition-all">
+                                    <div className="w-1/4">
+                                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Type</span>
+                                       <span className="font-mono text-xs font-bold text-brand-primary">CNAME</span>
+                                    </div>
+                                    <div className="w-1/4">
+                                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Name</span>
+                                       <span className="font-mono text-xs text-brand-primary">www</span>
+                                    </div>
+                                    <div className="flex-1">
+                                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Value</span>
+                                       <span className="font-mono text-xs text-brand-primary">cname.locallaunch.app</span>
+                                    </div>
+                                 </div>
                               </div>
                            </div>
-                        </div>
+                        )}
                      </div>
                   </div>
 
-                  {/* SEO & Analytics */}
+                  {/* Right Column: Deployment & Status */}
                   <div className="space-y-6">
-                     <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 p-6 sm:p-8">
-                        <div className="w-12 h-12 bg-brand-accent/10 text-brand-accent rounded-xl flex items-center justify-center mb-4">
-                           <Search size={24} />
-                        </div>
-                        <h3 className="font-bold text-lg text-brand-primary mb-2">One-Click SEO</h3>
-                        <p className="text-sm text-brand-secondary/50 mb-6">Tell us what you want to rank for, and we'll optimize your meta tags automatically.</p>
-                        
-                        <div className="space-y-4">
-                           <div>
-                              <label className="block text-sm font-bold text-slate-700 mb-2">Target Keywords (comma separated)</label>
-                              <input 
-                                 type="text" 
-                                 placeholder="e.g. plumber in austin, emergency plumbing" 
-                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-accent/10 focus:border-brand-accent outline-none transition-all text-brand-primary placeholder:text-slate-300"
-                              />
-                           </div>
-                           <div>
-                              <label className="block text-sm font-bold text-slate-700 mb-2">Short Business Description</label>
-                              <textarea 
-                                 rows={3}
-                                 placeholder="Describe your business in 1-2 sentences..." 
-                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-brand-accent/10 focus:border-brand-accent outline-none transition-all resize-none text-brand-primary placeholder:text-slate-300"
-                              />
-                           </div>
-                           <button className="w-full py-3 bg-brand-accent text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-lg shadow-brand-accent/20">
-                              Save SEO Settings
-                           </button>
-                        </div>
-                     </div>
-
-                     {/* Go Live Button */}
+                     {/* Go Live Card */}
                      <div className="bg-slate-900 rounded-2xl sm:rounded-3xl shadow-xl p-6 sm:p-8 text-white relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-8 opacity-10">
                            <Rocket size={120} />
                         </div>
                         <div className="relative z-10">
                            <h3 className="font-bold text-2xl mb-2">Ready to Go Live?</h3>
-                           <p className="text-slate-400 mb-6 max-w-sm">Once you've connected your domain and approved the design, click here to publish your site to the world.</p>
+                           <p className="text-slate-400 text-sm mb-6">Once you've connected your domain and approved the design, click here to publish your site to the world.</p>
+                           
                            <button 
                               onClick={handlePublishWebsite}
                               disabled={isPublishing}
-                              className="px-8 py-4 bg-white text-slate-900 font-bold rounded-xl hover:bg-slate-50 transition-colors shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-full py-4 bg-white text-slate-900 font-bold rounded-xl hover:bg-slate-50 transition-colors shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group"
                            >
-                              {isPublishing ? <Loader2 size={20} className="animate-spin" /> : <Rocket size={20} />} 
-                              {isPublishing ? 'Publishing...' : 'Publish Website'}
+                              {isPublishing ? <Loader2 size={20} className="animate-spin" /> : <Rocket size={20} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />} 
+                              {isPublishing ? 'Publishing...' : userProject?.status === 'live' ? 'Update Website' : 'Publish Website'}
                            </button>
+
+                           {userProject?.liveUrl && (
+                              <a 
+                                 href={userProject.liveUrl} 
+                                 target="_blank" 
+                                 rel="noopener noreferrer"
+                                 className="mt-4 flex items-center justify-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-colors"
+                              >
+                                 View Live Site <ExternalLink size={12} />
+                              </a>
+                           )}
                         </div>
+                     </div>
+
+                     {/* Deployment Status */}
+                     <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 p-6 sm:p-8">
+                        <h3 className="font-bold text-lg text-brand-primary mb-4">Deployment Status</h3>
+                        <div className="space-y-6">
+                           <div className="relative pl-8 border-l-2 border-slate-100 space-y-8">
+                              {/* Step 1 */}
+                              <div className="relative">
+                                 <div className={`absolute -left-[33px] top-0 w-4 h-4 rounded-full border-2 border-white shadow-sm ${userProject ? 'bg-green-500' : 'bg-slate-200'}`}></div>
+                                 <p className="text-sm font-bold text-brand-primary">Project Created</p>
+                                 <p className="text-xs text-brand-secondary/50">Initial setup and configuration complete.</p>
+                              </div>
+                              {/* Step 2 */}
+                              <div className="relative">
+                                 <div className={`absolute -left-[33px] top-0 w-4 h-4 rounded-full border-2 border-white shadow-sm ${userProject?.domain ? 'bg-green-500' : 'bg-slate-200'}`}></div>
+                                 <p className="text-sm font-bold text-brand-primary">Domain Connected</p>
+                                 <p className="text-xs text-brand-secondary/50">Custom domain or subdomain assigned.</p>
+                              </div>
+                              {/* Step 3 */}
+                              <div className="relative">
+                                 <div className={`absolute -left-[33px] top-0 w-4 h-4 rounded-full border-2 border-white shadow-sm ${userProject?.status === 'live' ? 'bg-green-500' : isPublishing ? 'bg-brand-accent animate-pulse' : 'bg-slate-200'}`}></div>
+                                 <p className="text-sm font-bold text-brand-primary">Production Build</p>
+                                 <p className="text-xs text-brand-secondary/50">Optimizing assets and deploying to CDN.</p>
+                              </div>
+                              {/* Step 4 */}
+                              <div className="relative">
+                                 <div className={`absolute -left-[33px] top-0 w-4 h-4 rounded-full border-2 border-white shadow-sm ${userProject?.status === 'live' ? 'bg-green-500' : 'bg-slate-200'}`}></div>
+                                 <p className="text-sm font-bold text-brand-primary">SSL Certificate</p>
+                                 <p className="text-xs text-brand-secondary/50">Securing your site with automatic HTTPS.</p>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* Quick Help */}
+                     <div className="p-6 bg-brand-accent/5 rounded-2xl border border-brand-accent/10">
+                        <div className="flex items-center gap-2 text-brand-accent mb-2">
+                           <AlertCircle size={16} />
+                           <span className="text-sm font-bold">Need help?</span>
+                        </div>
+                        <p className="text-xs text-brand-secondary/70 leading-relaxed">
+                           DNS changes can take up to 24-48 hours to propagate worldwide. If your site isn't showing up immediately, don't worry!
+                        </p>
                      </div>
                   </div>
                </div>
@@ -1879,7 +1886,9 @@ export const ProjectEditor: React.FC<DashboardProps> = ({ onNavigate, onPreview,
                              selectedPlanId === plan.id 
                                ? 'bg-brand-accent/5 border-brand-accent shadow-xl shadow-brand-accent/10 ring-1 ring-brand-accent' 
                                : 'bg-white border-slate-200 hover:border-brand-accent/50 shadow-sm'
-                                                       {selectedPlanId === plan.id && (
+                           }`}
+                         >
+                            {selectedPlanId === plan.id && (
                                <div className="absolute top-0 right-0 bg-brand-accent text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl uppercase tracking-wider flex items-center gap-1">
                                   <Check size={10} /> Selected
                                </div>
@@ -1896,6 +1905,7 @@ export const ProjectEditor: React.FC<DashboardProps> = ({ onNavigate, onPreview,
                                   No Build Cost
                                </p>
                                <p className="text-xs text-slate-500 mt-2 line-clamp-2">{plan.description}</p>
+                            </div>
                             <div className="space-y-2 mb-6 flex-1">
                                {plan.features.slice(0, 4).map((feature, i) => (
                                   <div key={i} className="flex items-start gap-2 text-[11px] sm:text-xs">

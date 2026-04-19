@@ -5,40 +5,40 @@ import { generateImage } from '../src/services/imageService';
 
 const features = [
   {
-    icon: Smartphone,
-    title: "Mobile Optimization",
-    description: "Seamless, high-performance experiences tailored for the modern mobile user. We prioritize speed and intuitive navigation.",
-    prompt: "Abstract minimalist smartphone visualization with vibrant blue and purple gradients, clean white background, high-end, 4k."
+    icon: Palette,
+    title: "Beautiful Templates",
+    description: "Start with stunning, professionally designed templates tailored for your industry. Customize everything to match your brand.",
+    prompt: "Website template gallery UI design, beautiful web layouts, modern digital design, vibrant blue and purple gradients, clean white background, high-end, 4k."
   },
   {
-    icon: Palette,
-    title: "Bespoke Design",
-    description: "Every pixel is crafted with intention. We create unique visual identities that resonate with your brand's core values.",
-    prompt: "Abstract minimalist art with organic shapes in vibrant pink and purple tones, clean white background, high-end, 4k."
+    icon: Smartphone,
+    title: "Drag & Drop Editor",
+    description: "Our intuitive visual editor lets you build and customize your site in real-time. No coding skills required.",
+    prompt: "Drag and drop website builder UI design, visual editor interface, modern web design components, vibrant pink and purple tones, clean white background, high-end, 4k."
   },
   {
     icon: Search,
-    title: "Strategic SEO",
-    description: "Data-driven search strategies that ensure your brand is discovered by the right audience at the right time.",
-    prompt: "Abstract minimalist visualization of data nodes in vibrant blue tones, clean white background, high-end, 4k."
+    title: "Built-in SEO",
+    description: "Climb the search rankings with automated SEO tools, fast load times, and clean, semantic code structure.",
+    prompt: "SEO analytics dashboard UI design, web graphics, data visualization charts, vibrant blue tones, clean white background, high-end, 4k."
   },
   {
     icon: Zap,
-    title: "Rapid Performance",
-    description: "Optimized codebases that deliver lightning-fast load times, reducing bounce rates and increasing conversions.",
-    prompt: "Abstract minimalist light trails in vibrant cyan and magenta, representing speed, clean white background, high-end, 4k."
+    title: "Lightning Fast Hosting",
+    description: "Your site is hosted on our global CDN, ensuring lightning-fast load times and 99.9% uptime for your visitors.",
+    prompt: "Web performance dashboard UI, speed optimization graphics, modern digital design, vibrant cyan and magenta, clean white background, high-end, 4k."
   },
   {
     icon: ShieldCheck,
-    title: "Secure Infrastructure",
-    description: "Enterprise-grade security protocols to protect your data and your customers' trust. Built on a foundation of reliability.",
-    prompt: "Abstract minimalist geometric shield in vibrant purple tones, clean white background, high-end, 4k."
+    title: "Custom Domains",
+    description: "Connect your own custom domain to build brand authority and look professional from day one.",
+    prompt: "Domain management dashboard UI design, modern web interface, vibrant purple tones, clean white background, high-end, 4k."
   },
   {
     icon: Settings,
-    title: "Scalable Systems",
-    description: "Architectures designed to grow with your business. We build for today with an eye on the future.",
-    prompt: "Abstract minimalist geometric structure in vibrant blue and pink, clean white background, high-end, 4k."
+    title: "Analytics Dashboard",
+    description: "Track your success with built-in analytics. Understand your audience and optimize your site for growth.",
+    prompt: "Website analytics dashboard UI, data visualization graphics, modern web design components, vibrant blue and pink, clean white background, high-end, 4k."
   }
 ];
 
@@ -58,60 +58,50 @@ const FeaturesGrid: React.FC = () => {
   }, []);
 
   return (
-    <section className="py-32 relative overflow-hidden bg-white">
+    <section className="py-32 relative overflow-hidden bg-[#f5f5f7]">
       <div className="container mx-auto px-6 relative z-10">
-        <div className="max-w-3xl mb-24">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-sm font-bold text-brand-accent mb-6"
-          >
-            OUR CAPABILITIES
-          </motion.div>
+        <div className="max-w-3xl mb-24 text-center mx-auto">
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-5xl md:text-7xl font-bold text-brand-primary mb-8 leading-tight tracking-tight"
+            className="text-5xl md:text-7xl font-bold text-[#1d1d1f] mb-8 leading-tight tracking-tighter"
           >
-            ENGINEERED <br />
-            <span className="brand-gradient-text italic font-light">FOR EXCELLENCE</span>.
+            Powerful. <br />
+            Yet simple.
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="text-xl text-brand-secondary leading-relaxed"
+            transition={{ delay: 0.1 }}
+            className="text-xl text-[#86868b] leading-relaxed font-medium tracking-tight"
           >
-            We combine technical precision with creative vision to deliver digital solutions that don't just work—they inspire.
+            We provide all the tools you need to build, manage, and grow your online presence without writing a single line of code.
           </motion.p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => (
             <motion.div
               key={index}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="group relative p-10 rounded-[2.5rem] transition-all duration-700 bg-gray-50 border border-gray-100 hover:border-brand-accent/30 hover:shadow-2xl hover:shadow-brand-accent/5 hover:-translate-y-2"
+              className="group relative p-10 rounded-[2rem] bg-white border border-black/5 hover:shadow-xl transition-all duration-500 overflow-hidden"
             >
-              <div className="mb-10 w-20 h-20 rounded-3xl bg-white flex items-center justify-center group-hover:bg-brand-accent group-hover:text-white transition-all duration-700 relative z-10 shadow-xl shadow-black/5 overflow-hidden">
+              <div className="mb-8 w-16 h-16 rounded-2xl bg-[#f5f5f7] flex items-center justify-center text-[#1d1d1f] transition-all duration-500 relative z-10">
                 <feature.icon 
-                  size={32} 
-                  className="text-brand-secondary/40 group-hover:text-white transition-colors duration-700 relative z-10" 
+                  size={28} 
                   strokeWidth={1.5}
                 />
               </div>
               <div className="relative z-10">
-                <h3 className="text-2xl font-bold text-brand-primary mb-4 group-hover:text-brand-accent transition-colors duration-700 tracking-tight">
+                <h3 className="text-2xl font-bold text-[#1d1d1f] mb-3 tracking-tight">
                   {feature.title}
                 </h3>
-                <p className="text-brand-secondary leading-relaxed group-hover:text-brand-primary transition-colors duration-700">
+                <p className="text-[#86868b] leading-relaxed font-medium">
                   {feature.description}
                 </p>
               </div>
@@ -119,7 +109,7 @@ const FeaturesGrid: React.FC = () => {
                 <img 
                   src={featureImages[index]} 
                   alt={feature.title} 
-                  className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-10 transition-opacity duration-1000 rounded-[2.5rem] pointer-events-none grayscale"
+                  className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-5 transition-opacity duration-700 rounded-[2rem] pointer-events-none grayscale"
                   referrerPolicy="no-referrer"
                 />
               )}

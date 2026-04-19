@@ -11,38 +11,38 @@ const TEAM_MEMBERS = [
   {
     id: 1,
     name: "Alex Rivera",
-    role: "Founder & Creative Director",
+    role: "Founder & CEO",
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
-    bio: "Former design lead at big tech, now dedicated to bringing enterprise-level design to Main Street."
+    bio: "Former engineering lead at big tech, now dedicated to democratizing website creation."
   },
   {
     id: 2,
     name: "Sarah Chen",
-    role: "Lead Developer",
+    role: "CTO",
     image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80",
-    bio: "Full-stack wizard who ensures every pixel is perfect and every page loads instantly."
+    bio: "Platform architect who ensures our infrastructure can scale to millions of users."
   },
   {
     id: 3,
     name: "Marcus Johnson",
-    role: "SEO Strategist",
+    role: "Head of Product",
     image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80",
-    bio: "Data nerd who knows exactly how to get your business to the top of Google Maps."
+    bio: "Product visionary focused on making complex tools feel simple and intuitive."
   },
   {
     id: 4,
     name: "Emily Davis",
-    role: "Content Manager",
+    role: "Head of Design",
     image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=400&q=80",
-    bio: "Storyteller who crafts compelling copy that turns casual visitors into loyal customers."
+    bio: "Design leader who crafts the beautiful templates and components our users love."
   }
 ];
 
 const VALUES = [
   {
     icon: Heart,
-    title: "Local First",
-    description: "We believe in the power of local communities. Your success is our neighborhood's success."
+    title: "User First",
+    description: "We believe in the power of intuitive design. Your success is our platform's success."
   },
   {
     icon: Zap,
@@ -52,12 +52,12 @@ const VALUES = [
   {
     icon: Target,
     title: "Results Driven",
-    description: "Pretty isn't enough. We design for conversion, calls, and foot traffic."
+    description: "Pretty isn't enough. We design templates for conversion, engagement, and growth."
   },
   {
     icon: Users,
-    title: "Partnership",
-    description: "We aren't just a vendor; we're your digital partner for the long haul."
+    title: "Community",
+    description: "We aren't just a platform; we're a community of creators building the future."
   }
 ];
 
@@ -76,14 +76,14 @@ const About: React.FC<AboutProps> = ({ onNavigate }) => {
             animate={{ opacity: 1, y: 0 }}
             className="text-sm font-bold text-brand-accent mb-6"
           >
-            OUR STORY
+            OUR MISSION
           </motion.div>
           <h1 className="text-5xl md:text-7xl font-bold text-brand-primary mb-8 tracking-tight">
-            We are <span className="brand-gradient-text italic font-light">Milestone</span>.
+            We are <span className="brand-gradient-text italic font-light">Wollo</span>.
           </h1>
           <p className="text-xl text-brand-secondary leading-relaxed">
-            We are a team of designers, developers, and strategists obsessed with one thing: 
-            <span className="font-semibold text-brand-primary"> helping brands define their digital legacy in the modern age.</span>
+            We are a team of engineers, designers, and creators obsessed with one thing: 
+            <span className="font-semibold text-brand-primary"> democratizing access to world-class digital experiences.</span>
           </p>
         </motion.div>
       </section>
@@ -100,16 +100,16 @@ const About: React.FC<AboutProps> = ({ onNavigate }) => {
             >
               <div className="relative rounded-[3rem] overflow-hidden shadow-2xl shadow-black/5 border border-gray-100">
                  <img 
-                   src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80" 
-                   alt="Team working together" 
+                   src="https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=800&q=80" 
+                   alt="UI/UX Design Workspace" 
                    className="w-full h-full object-cover"
                  />
                  <div className="absolute inset-0 bg-gradient-to-tr from-brand-primary/20 to-transparent"></div>
               </div>
               {/* Floating Badge */}
               <div className="absolute -bottom-10 -right-10 w-48 bg-white p-8 rounded-[2rem] shadow-2xl shadow-black/10 border border-gray-100 hidden md:block">
-                 <div className="text-4xl font-bold text-brand-accent mb-1">100+</div>
-                 <div className="text-xs text-brand-secondary/60 font-bold uppercase tracking-widest">Brands Transformed</div>
+                 <div className="text-4xl font-bold text-brand-accent mb-1">10k+</div>
+                 <div className="text-xs text-brand-secondary/60 font-bold uppercase tracking-widest">Active Sites</div>
               </div>
             </motion.div>
 
@@ -122,17 +122,16 @@ const About: React.FC<AboutProps> = ({ onNavigate }) => {
               <h2 className="text-4xl font-bold text-brand-primary mb-8 tracking-tight">Our Evolution</h2>
               <div className="space-y-6 text-lg text-brand-secondary leading-relaxed">
                 <p>
-                  It started with a simple observation: the most ambitious brands often lacked the digital precision they deserved. 
-                  Incredible products and services were losing momentum simply because 
-                  they didn't look the part online.
+                  It started with a simple observation: building a high-quality website was either too expensive, too complicated, or both. 
+                  Incredible ideas were losing momentum simply because the barrier to entry was too high.
                 </p>
                 <p>
-                  We founded Milestone Digital to change that. We brought enterprise-level design standards, cutting-edge performance, 
-                  and big-brand strategy to every project we touch.
+                  We founded Wollo to change that. We built a platform that brings enterprise-level design standards, cutting-edge performance, 
+                  and powerful tools to everyone, regardless of their technical background.
                 </p>
                 <p>
-                  Today, we're proud to be the secret weapon for over 100 businesses across the globe. We don't just build websites; 
-                  we build digital legacies that work as hard as you do.
+                  Today, we're proud to be the engine behind thousands of businesses, creators, and entrepreneurs across the globe. We don't just provide software; 
+                  we provide the foundation for your digital success.
                 </p>
               </div>
             </motion.div>
@@ -173,16 +172,16 @@ const About: React.FC<AboutProps> = ({ onNavigate }) => {
         <div className="container mx-auto px-6 relative z-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
              <div>
-                <div className="text-5xl font-bold mb-4 text-brand-accent">3</div>
-                <div className="text-brand-secondary/40 text-xs font-bold uppercase tracking-widest">Years Active</div>
+                <div className="text-5xl font-bold mb-4 text-brand-accent">10k+</div>
+                <div className="text-brand-secondary/40 text-xs font-bold uppercase tracking-widest">Active Sites</div>
              </div>
              <div>
-                <div className="text-5xl font-bold mb-4 brand-gradient-text">120+</div>
-                <div className="text-brand-secondary/40 text-xs font-bold uppercase tracking-widest">Projects Launched</div>
+                <div className="text-5xl font-bold mb-4 brand-gradient-text">99.9%</div>
+                <div className="text-brand-secondary/40 text-xs font-bold uppercase tracking-widest">Uptime</div>
              </div>
              <div>
-                <div className="text-5xl font-bold mb-4 text-brand-accent">5</div>
-                <div className="text-brand-secondary/40 text-xs font-bold uppercase tracking-widest">Design Awards</div>
+                <div className="text-5xl font-bold mb-4 text-brand-accent">50+</div>
+                <div className="text-brand-secondary/40 text-xs font-bold uppercase tracking-widest">Templates</div>
              </div>
              <div>
                 <div className="text-5xl font-bold mb-4 text-brand-accent">24/7</div>
@@ -226,9 +225,9 @@ const About: React.FC<AboutProps> = ({ onNavigate }) => {
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-brand-accent/5 rounded-full blur-3xl"></div>
           
           <div className="relative z-10 max-w-2xl mx-auto">
-            <h2 className="text-4xl md:text-6xl font-bold text-brand-primary mb-8 leading-tight tracking-tight">Ready to define your <span className="brand-gradient-text italic font-light">Milestone</span>?</h2>
+            <h2 className="text-4xl md:text-6xl font-bold text-brand-primary mb-8 leading-tight tracking-tight">Ready to build your <span className="brand-gradient-text italic font-light">future</span>?</h2>
             <p className="text-brand-secondary text-lg mb-12 leading-relaxed">
-              We're currently accepting new projects for next quarter. Let's build something amazing together.
+              Join thousands of creators who have already launched their dream websites on Wollo.
             </p>
             <button 
               onClick={() => {
@@ -239,7 +238,7 @@ const About: React.FC<AboutProps> = ({ onNavigate }) => {
               }}
               className="inline-flex items-center px-12 py-6 brand-gradient-bg text-white font-bold rounded-full hover:opacity-90 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-brand-accent/20"
             >
-              Get in Touch <ArrowRight className="ml-3 w-5 h-5" />
+              Start Building Free <ArrowRight className="ml-3 w-5 h-5" />
             </button>
           </div>
         </div>

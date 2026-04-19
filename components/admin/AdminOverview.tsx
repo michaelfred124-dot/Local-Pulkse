@@ -73,10 +73,10 @@ const AdminOverview: React.FC = () => {
             {projects.slice(0, 5).map((project) => (
               <div key={project.id} className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-lg transition-colors">
                 <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-sm">
-                  {(project.businessName || 'U').charAt(0)}
+                  {(project.name || 'U').charAt(0)}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-slate-900">New project: {project.businessName || 'Untitled'}</p>
+                  <p className="text-sm font-medium text-slate-900">New project: {project.name || 'Untitled'}</p>
                   <p className="text-xs text-slate-500">{project.createdAt ? new Date(project.createdAt).toLocaleDateString() : 'Unknown'}</p>
                 </div>
               </div>

@@ -1,171 +1,347 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { ArrowUpRight, X, ChevronLeft, Layout, Star, MapPin, Phone, Mail, Loader2, Globe, Shield, Zap, Clock, Search, Monitor, Smartphone, Eye, ExternalLink, Filter } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
+import { ArrowUpRight, X, ChevronLeft, Layout, Star, MapPin, Phone, Mail, Loader2, Globe, Shield, Zap, Clock, Search, Monitor, Smartphone, Eye, ExternalLink, Filter, Sparkles, Folder } from 'lucide-react';
 import { PortfolioItem, Page } from '../types';
 import { TemplateRenderer, TemplateMiniPreview } from './TemplateRenderer';
 import { generateImage } from '../src/services/imageService';
+import { useAuth } from './AuthContext';
+import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 
 // Comprehensive set of industry-specific templates
-const INDUSTRY_PROJECTS: PortfolioItem[] = [
+const DEFAULT_INDUSTRY_PROJECTS: PortfolioItem[] = [
   { 
-    id: 1, 
-    templateId: 'bistro',
-    title: 'The Corner Bistro', 
+    id: 102, 
+    templateId: 'auto-detailing', 
+    title: 'Easy Does It Detailing', 
+    category: 'Auto Detailing', 
+    imageUrl: 'https://images.unsplash.com/photo-1601362840469-51e4d8d59085?auto=format&fit=crop&w=1200&q=80',
+    vibe: "High-Energy & Professional",
+    prompt: "A professional, high-end modern website design mockup for a mobile auto detailing service, UI/UX design presentation, web graphics, vibrant orange and neon blue colors, dark mode aesthetic, minimalist, 4k."
+  },
+  { 
+    id: 101, 
+    templateId: 'local-1', 
+    title: 'The Local Boutique', 
+    category: 'Local Business', 
+    imageUrl: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1200&q=80',
+    vibe: "Warm & Sophisticated",
+    prompt: "A professional, high-end modern website design mockup for a local boutique service, UI/UX design presentation, web graphics, warm beige and charcoal colors, clean white background, minimalist, 4k."
+  },
+  { 
+    id: 13, 
+    templateId: 'construction', 
+    title: 'Elite Construction', 
+    category: 'Construction', 
+    imageUrl: 'https://images.unsplash.com/photo-1541888946425-d81bb19480c5?auto=format&fit=crop&q=80&w=1200',
+    vibe: "Professional & Rugged",
+    prompt: "A professional, high-end modern website design mockup for a construction company, UI/UX design presentation, web graphics, vibrant orange and dark grey gradients, clean white background, minimalist, 4k."
+  },
+  { 
+    id: 14, 
+    templateId: 'bakery', 
+    title: 'Golden Crust Bakery', 
     category: 'Food & Beverage', 
-    imageUrl: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=1200&q=80',
-    hours: ['Monday - Friday: 5:00 PM - 10:00 PM', 'Saturday: 4:00 PM - 11:00 PM', 'Sunday: 4:00 PM - 9:00 PM'],
-    faqs: [
-      { question: "Do you take reservations?", answer: "Yes, we highly recommend booking in advance through our online portal." },
-      { question: "Do you accommodate dietary restrictions?", answer: "Absolutely. Our chef can modify most dishes for vegan, gluten-free, or allergy-specific needs." },
-      { question: "Is there a dress code?", answer: "Smart casual is preferred, but we welcome everyone to enjoy our culinary experience." }
-    ],
-    reviews: [
-      { name: "James Wilson", role: "Local Foodie", content: "The atmosphere here is unmatched. It's my go-to spot for anniversary dinners and the best steak in town.", rating: 5 },
-      { name: "Elena Gomez", role: "Food Blogger", content: "The attention to detail in their plating is incredible. You can really taste the fresh, locally-sourced ingredients.", rating: 5 }
-    ],
-    menu: [
-      { name: "Truffle Risotto", description: "Arborio rice, wild mushrooms, white truffle oil, and aged parmesan.", price: "$28.00", category: "Mains" },
-      { name: "Pan-Seared Scallops", description: "Diver scallops, cauliflower purée, crispy pancetta, and lemon butter.", price: "$34.00", category: "Mains" },
-      { name: "Wagyu Beef Tartare", description: "Hand-cut wagyu, quail egg, capers, and toasted brioche.", price: "$22.00", category: "Starters" },
-      { name: "Artisan Burrata", description: "Fresh burrata, heirloom tomatoes, basil pesto, and balsamic glaze.", price: "$18.00", category: "Starters" },
-      { name: "Dark Chocolate Fondant", description: "Warm chocolate cake with a molten center, served with vanilla bean gelato.", price: "$14.00", category: "Desserts" }
-    ],
-    features: [
-      { title: 'Table Reservations', icon: Zap, desc: 'Seamless online booking system with real-time availability.' },
-      { title: 'Inventory Tracking', icon: Clock, desc: 'Real-time ingredient management ensures your favorite dishes are always available.' },
-      { title: 'Secure Checkout', icon: Shield, desc: 'Safe and encrypted payment processing for private events and deposits.' },
-      { title: 'VIP Rewards', icon: Star, desc: 'Earn points on every visit and unlock exclusive tasting menus.' },
-      { title: 'Restaurant Management', icon: Layout, desc: 'Unified dashboard to manage orders, staff, and menus across all locations.' },
-      { title: 'Local Discovery', icon: Globe, desc: 'Be the first choice for diners in your neighborhood with optimized presence.' }
-    ],
-    advantagePoints: [
-      'Instant Menu Updates for seasonal specials',
-      'Automated Booking Alerts for your guests',
-      'Seamless Mobile Experience for easy reservations'
-    ],
-    featureHeadline: "The Architecture of Taste",
-    featureSubheadline: "We translate the sensory experience of a world-class restaurant into a digital interface that breathes sophistication.",
-    advantageHeadline: "Prestige in Every Pixel",
-    advantageSubheadline: "A digital concierge for the modern diner.",
-    advantageDescription: "Our design philosophy for The Corner Bistro centers on 'Quiet Luxury'—where every interaction feels intentional, refined, and deeply personal.",
-    dashboardTitle: "The Culinary Collection",
-    dashboardDescription: "Manage your seasonal menus and exclusive wine lists with surgical precision.",
-    dashboardMetricLabel: "Artisan Dishes",
-    reviewsHeadline: "The Critic's Verdict",
-    galleryImages: [
-      'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1544148103-0773bf10d330?auto=format&fit=crop&w=800&q=80'
-    ]
+    imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=1200',
+    vibe: "Warm & Inviting",
+    prompt: "A professional, high-end modern website design mockup for an artisanal bakery, UI/UX design presentation, web graphics, warm brown and cream gradients, clean white background, minimalist, 4k."
   },
   { 
-    id: 2, 
-    templateId: 'yoga',
-    title: 'Zen Yoga', 
+    id: 15, 
+    templateId: 'dentist', 
+    title: 'Bright Smile Dental', 
     category: 'Health & Wellness', 
-    imageUrl: 'https://images.unsplash.com/photo-1518611012118-2969c6360207?auto=format&fit=crop&w=1200&q=80',
-    hours: ['Mon-Thu: 6am - 9pm', 'Fri: 6am - 7pm', 'Sat-Sun: 8am - 4pm'],
-    faqs: [
-      { question: "Do I need to bring my own mat?", answer: "We provide mats for free, but you are welcome to bring your own." },
-      { question: "Are classes suitable for beginners?", answer: "Yes, we have specific 'Intro to Yoga' classes every Tuesday and Thursday." }
-    ],
-    reviews: [
-      { name: "Elena R.", role: "Member", content: "Such a peaceful space. The instructors are incredibly knowledgeable.", rating: 5 },
-      { name: "David K.", role: "Athlete", content: "Great for recovery. The hot yoga sessions are intense but rewarding.", rating: 5 }
-    ],
-    services: [
-      { title: "Vinyasa Flow", description: "A dynamic practice connecting breath with movement.", price: "$20/class" },
-      { title: "Restorative Yoga", description: "Deep relaxation using props to support the body.", price: "$25/class" },
-      { title: "Private Session", description: "One-on-one instruction tailored to your goals.", price: "$80/hour" }
-    ],
-    features: [
-      { title: 'Smart Booking', icon: Clock, desc: 'Intelligent scheduling system that manages staff availability and room capacity.' },
-      { title: 'Client Portal', icon: Layout, desc: 'Secure area for clients to manage memberships, history, and preferences.' },
-      { title: 'HIPAA Ready', icon: Shield, desc: 'Privacy-first architecture ensuring all client data remains confidential.' },
-      { title: 'Automated Reminders', icon: Zap, desc: 'Reduce no-shows with SMS and email alerts triggered by our backend.' },
-      { title: 'Membership Billing', icon: Star, desc: 'Recurring revenue management with automated failed payment recovery.' },
-      { title: 'Virtual Consults', icon: Globe, desc: 'Integrated video platform for remote wellness sessions and check-ins.' }
-    ],
-    advantagePoints: [
-      'Seamless integration with Mindbody or Zen Planner',
-      'Custom intake forms that sync directly to your CRM',
-      'Optimized landing pages for high-conversion ad campaigns'
-    ]
+    imageUrl: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&q=80&w=1200',
+    vibe: "Clean & Trustworthy",
+    prompt: "A professional, high-end modern website design mockup for a dental clinic, UI/UX design presentation, web graphics, vibrant blue and white gradients, clean white background, minimalist, 4k."
   },
   { 
-    id: 3, 
-    templateId: 'legal',
-    title: 'Legal Link', 
-    category: 'Services', 
-    imageUrl: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1200&q=80',
-    hours: ['Mon-Fri: 9am - 6pm', 'Sat: By Appointment', 'Sun: Closed'],
-    faqs: [
-      { question: "Do you offer free consultations?", answer: "Yes, we offer a 15-minute initial consultation at no cost." },
-      { question: "What areas of law do you specialize in?", answer: "We specialize in Corporate Law, Intellectual Property, and Employment Law." }
-    ],
-    reviews: [
-      { name: "Robert M.", role: "CEO, TechStart", content: "Professional, efficient, and highly effective. They handled our merger perfectly.", rating: 5 },
-      { name: "Linda S.", role: "Entrepreneur", content: "Great communication throughout the entire process. Highly recommend.", rating: 4 }
-    ],
-    services: [
-      { title: "Corporate Formation", description: "Complete legal setup for your new business venture.", price: "From $1,500" },
-      { title: "Contract Review", description: "Thorough analysis and negotiation of business agreements.", price: "$300/hour" },
-      { title: "IP Protection", description: "Trademark and copyright filings to secure your brand.", price: "Custom Quote" }
-    ],
-    features: [
-      { title: 'Secure Vault', icon: Shield, desc: 'Encrypted document storage for sensitive legal files and client records.' },
-      { title: 'E-Sign Ready', icon: Zap, desc: 'Integrated digital signature platform for faster contract execution.' },
-      { title: 'Client Portal', icon: Layout, desc: 'Private dashboard for clients to track case progress and billing.' },
-      { title: 'Smart Intake', icon: Clock, desc: 'Automated screening forms that qualify leads before your first call.' },
-      { title: 'Billing Engine', icon: Star, desc: 'Automated trust accounting and one-click invoicing for retainers.' },
-      { title: 'Local Authority', icon: Globe, desc: 'Strategic SEO to position your firm as the top local legal expert.' }
-    ],
-    advantagePoints: [
-      'Compliant document management systems',
-      'Automated appointment scheduling and reminders',
-      'High-conversion landing pages for specific practice areas'
-    ]
+    id: 16, 
+    templateId: 'lawncare', 
+    title: 'Lush Green Lawns', 
+    category: 'Lawn Care', 
+    imageUrl: 'https://images.unsplash.com/photo-1558904541-efa8c1965f1e?auto=format&fit=crop&q=80&w=1200',
+    vibe: "Fresh & Vibrant",
+    prompt: "A professional, high-end modern website design mockup for a lawn care service, UI/UX design presentation, web graphics, vibrant green and yellow gradients, clean white background, minimalist, 4k."
   },
-  { id: 4, templateId: 'fitness', title: 'Urban Fit', category: 'Health & Wellness', imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1200&q=80' },
-  { id: 5, templateId: 'cleaning', title: 'Green Scape', category: 'Services', imageUrl: 'https://images.unsplash.com/photo-1558904541-efa843a96f01?auto=format&fit=crop&w=1200&q=80' },
-  { id: 6, templateId: 'dental', title: 'Pure Dental', category: 'Health & Wellness', imageUrl: 'https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=1200&q=80' },
-  { id: 7, templateId: 'tech', title: 'Tech Fix', category: 'Services', imageUrl: 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=1200&q=80' },
-  { id: 8, templateId: 'bistro', title: 'Bistro 55', category: 'Food & Beverage', imageUrl: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=1200&q=80' },
-  { id: 9, templateId: 'corporate', title: 'Nexus Corp', category: 'Corporate', imageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80' },
-  { id: 10, templateId: 'pet', title: 'Luxe Stay', category: 'Hospitality', imageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80' },
-  { id: 11, templateId: 'ecommerce', title: 'Summit Gear', category: 'E-Commerce', imageUrl: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=1200&q=80' },
-  { id: 12, templateId: 'bakery', title: 'Fresh Market', category: 'E-Commerce', imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80' },
+  { 
+    id: 17, 
+    templateId: 'modern', 
+    title: 'SaaS Flow', 
+    category: 'Technology', 
+    imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1200',
+    vibe: "Modern & Tech",
+    prompt: "A stunning, high-end modern SaaS website mockup on a desktop screen, UI/UX design showcase, web graphics, vibrant cyan and purple gradients, minimalist, cinematic lighting, clean white background, 4k."
+  },
+  { 
+    id: 18, 
+    templateId: 'wellness', 
+    title: 'Serenity Spa', 
+    category: 'Health & Wellness', 
+    imageUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=1200',
+    vibe: "Serene & Balanced",
+    prompt: "A professional, high-end modern website design mockup for a luxury spa and wellness center, UI/UX design presentation, web graphics, soft teal and white gradients, clean white background, minimalist, 4k."
+  },
+  { 
+    id: 19, 
+    templateId: 'artisan', 
+    title: 'The Woodshop', 
+    category: 'Artisan', 
+    imageUrl: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&q=80&w=1200',
+    vibe: "Crafted & Authentic",
+    prompt: "A professional, high-end modern website design mockup for a custom woodworking shop, UI/UX design presentation, web graphics, warm wood tones and dark grey gradients, clean white background, minimalist, 4k."
+  },
+  { 
+    id: 20, 
+    templateId: 'restaurant', 
+    title: 'Lumiere Dining', 
+    category: 'Food & Beverage', 
+    imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=1200',
+    vibe: "Elegant & Culinary",
+    prompt: "A professional, high-end modern website design mockup for a fine dining restaurant, UI/UX design presentation, web graphics, deep gold and black gradients, clean white background, minimalist, 4k."
+  },
+  { 
+    id: 21, 
+    templateId: 'plumber', 
+    title: 'Pro Plumber', 
+    category: 'Home Services', 
+    imageUrl: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=1200',
+    vibe: "Service",
+    prompt: "A professional, high-end modern website design mockup for a plumbing service, UI/UX design presentation, web graphics, blue and white gradients, clean white background, minimalist, 4k."
+  },
+  { 
+    id: 22, 
+    templateId: 'electrician', 
+    title: 'Expert Electrician', 
+    category: 'Home Services', 
+    imageUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=1200',
+    vibe: "Service",
+    prompt: "A professional, high-end modern website design mockup for an electrician service, UI/UX design presentation, web graphics, yellow and black gradients, clean white background, minimalist, 4k."
+  },
+  { 
+    id: 23, 
+    templateId: 'cleaning', 
+    title: 'Sparkle Cleaning', 
+    category: 'Home Services', 
+    imageUrl: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=1200',
+    vibe: "Clean",
+    prompt: "A professional, high-end modern website design mockup for a cleaning service, UI/UX design presentation, web graphics, teal and white gradients, clean white background, minimalist, 4k."
+  },
+  { 
+    id: 24, 
+    templateId: 'realestate', 
+    title: 'Prime Real Estate', 
+    category: 'Real Estate', 
+    imageUrl: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=1200',
+    vibe: "Luxury",
+    prompt: "A professional, high-end modern website design mockup for a real estate agency, UI/UX design presentation, web graphics, indigo and white gradients, clean white background, minimalist, 4k."
+  },
+  { 
+    id: 25, 
+    templateId: 'fitness', 
+    title: 'Fitness & Gym', 
+    category: 'Health & Wellness', 
+    imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=1200',
+    vibe: "Health",
+    prompt: "A professional, high-end modern website design mockup for a fitness gym, UI/UX design presentation, web graphics, red and black gradients, clean white background, minimalist, 4k."
+  },
+  { 
+    id: 26, 
+    templateId: 'artist-minimal', 
+    title: 'Minimalist Artist', 
+    category: 'Portfolio', 
+    imageUrl: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&q=80&w=1200',
+    vibe: "Minimal",
+    prompt: "A clean, minimalist gallery-style website design mockup for a fine artist or photographer, UI/UX design presentation, lots of whitespace, elegant typography, 4k."
+  },
+  { 
+    id: 27, 
+    templateId: 'artist-creative', 
+    title: 'Creative Studio', 
+    category: 'Portfolio', 
+    imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200',
+    vibe: "Creative",
+    prompt: "A bold, dark-themed creative portfolio website design mockup for a digital artist, UI/UX design presentation, vibrant neon accents, masonry layout, 4k."
+  },
+  { 
+    id: 28, 
+    templateId: 'heritage', 
+    title: 'Heritage Modern', 
+    category: 'Real Estate', 
+    imageUrl: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=1200',
+    vibe: "Heritage",
+    prompt: "A luxurious, editorial-style website design mockup for an architectural firm, UI/UX design presentation, serif typography, elegant layout, deep emerald green and off-white colors, 4k."
+  }
 ];
 
-const CATEGORIES = ['All', 'Food & Beverage', 'Health & Wellness', 'Services', 'Corporate', 'E-Commerce', 'Hospitality'];
+const CATEGORIES = ['All', 'My Sites', 'Auto Detailing', 'Local Business', 'Construction', 'Food & Beverage', 'Health & Wellness', 'Lawn Care', 'Technology', 'Artisan', 'Home Services', 'Real Estate', 'Portfolio'];
 
 interface GalleryProps {
   onNavigate?: (page: Page) => void;
   onEditTemplate?: (templateId: string) => void;
 }
 
+const GalleryCard: React.FC<{ 
+  item: PortfolioItem; 
+  index: number; 
+  image?: string;
+  onClick: () => void;
+  className?: string;
+}> = ({ item, index, image, onClick, className = "" }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  
+  const { scrollYProgress } = useScroll({
+    target: cardRef,
+    offset: ["start end", "end start"]
+  });
+  
+  const y = useTransform(scrollYProgress, [0, 1], [-30, 30]);
+
+  return (
+    <motion.div
+      ref={cardRef}
+      layout
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8, delay: (index % 3) * 0.1, ease: [0.16, 1, 0.3, 1] }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      onClick={onClick}
+      className={`group relative rounded-[2.5rem] overflow-hidden cursor-pointer bg-gray-50 border border-black/5 shadow-sm hover:shadow-2xl transition-all duration-700 ${className}`}
+    >
+      <div className="absolute inset-0 w-full h-full overflow-hidden">
+        {image || item.imageUrl ? (
+          <motion.img 
+            style={{ y }}
+            src={image || item.imageUrl} 
+            alt={item.title} 
+            className="absolute inset-0 w-full h-[130%] object-cover transition-transform duration-1000 group-hover:scale-105"
+            referrerPolicy="no-referrer"
+          />
+        ) : item.templateId ? (
+          <div className="w-full h-full">
+            <TemplateMiniPreview item={item} />
+          </div>
+        ) : (
+          <div className="w-full h-full bg-gray-100 animate-pulse flex items-center justify-center">
+             <Folder className="text-gray-300" size={64} />
+          </div>
+        )}
+        <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-700 ${isHovered ? 'opacity-100' : 'opacity-40'}`} />
+      </div>
+
+      <div className="absolute inset-0 p-8 flex flex-col justify-end z-10">
+        <div className="flex flex-col items-start translate-y-4 group-hover:translate-y-0 transition-transform duration-700 ease-[0.16,1,0.3,1]">
+          <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] text-brand-accent uppercase mb-2">
+            {item.category === 'My Site' ? <Folder size={10} /> : <Sparkles size={10} />}
+            {item.category}
+          </div>
+          <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">
+            {item.title}
+          </h3>
+          <AnimatePresence>
+            {isHovered && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <p className="text-white/60 text-xs mb-4 max-w-[200px]">
+                  {item.vibe || "A premium digital experience."}
+                </p>
+                <div className="text-[10px] font-bold text-white border-b border-white/30 pb-1">
+                  {item.category === 'My Site' ? 'EDIT PROJECT' : 'EXPLORE PROJECT'}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      <div className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+        <ArrowUpRight size={16} className="text-white" />
+      </div>
+    </motion.div>
+  );
+};
+
 const Gallery: React.FC<GalleryProps> = ({ onNavigate, onEditTemplate }) => {
+  const { user } = useAuth();
   const [filter, setFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItem, setSelectedItem] = useState<PortfolioItem | null>(null);
-  const [projectImages, setProjectImages] = useState<Record<number, string>>({});
+  const [projectImages, setProjectImages] = useState<Record<number | string, string>>({});
+  const [userProjects, setUserProjects] = useState<PortfolioItem[]>([]);
+
+  useEffect(() => {
+    if (!user) {
+      setUserProjects([]);
+      return;
+    }
+
+    const q = query(collection(db, 'projects'), where('clientId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      const projectsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Fetch content for these projects to populate the mini previews
+      const projects: PortfolioItem[] = await Promise.all(projectsData.map(async (proj: any) => {
+        let content: any = {};
+        try {
+          const contentQ = query(collection(db, 'content'), where('projectId', '==', proj.id));
+          const contentSnap = await getDocs(contentQ);
+          if (!contentSnap.empty) {
+            content = contentSnap.docs[0].data();
+          }
+        } catch (e) {
+          console.error("Error fetching content for project", proj.id, e);
+        }
+
+        return {
+          id: proj.id,
+          templateId: proj.templateId || proj.id,
+          title: proj.name || 'Untitled Project',
+          category: 'My Site',
+          vibe: proj.vibe || 'Your custom digital presence.',
+          prompt: proj.prompt || `A professional website design for ${proj.name}, modern UI/UX, clean white background, 4k.`,
+          imageUrl: content.heroImage,
+          heroHeadline: content.heroHeadline,
+          heroSubheadline: content.heroSubheadline,
+          aboutText: content.aboutText,
+          servicesText: content.servicesText,
+          logo: content.logo,
+          location: content.location,
+          contactEmail: content.contactEmail
+        };
+      }));
+      
+      setUserProjects(projects);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'projects');
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const allItems = [...userProjects, ...DEFAULT_INDUSTRY_PROJECTS];
 
   useEffect(() => {
     const fetchImages = async () => {
-      const images: Record<number, string> = {};
-      for (let i = 0; i < INDUSTRY_PROJECTS.length; i++) {
-        const item = INDUSTRY_PROJECTS[i];
-        const prompt = `A professional, high-end modern website design for ${item.title} in the ${item.category} industry, vibrant blue and purple gradients, clean white background, minimalist, 4k.`;
+      const images: Record<number | string, string> = {};
+      const promises = allItems.map(async (item) => {
+        if (projectImages[item.id]) return;
+        const prompt = item.prompt || `A professional, high-end modern website design mockup for ${item.title} in the ${item.category} industry, UI/UX design presentation, web graphics, vibrant blue and purple gradients, clean white background, minimalist, 4k.`;
         const img = await generateImage(prompt);
         if (img) images[item.id] = img;
-      }
-      setProjectImages(images);
+      });
+      await Promise.all(promises);
+      setProjectImages(prev => ({ ...prev, ...images }));
     };
     fetchImages();
-  }, []);
+  }, [userProjects]);
 
-  // Lock body scroll when modal is open
   useEffect(() => {
     if (selectedItem) {
       document.body.style.overflow = 'hidden';
@@ -177,8 +353,10 @@ const Gallery: React.FC<GalleryProps> = ({ onNavigate, onEditTemplate }) => {
     };
   }, [selectedItem]);
 
-  const filteredItems = INDUSTRY_PROJECTS.filter(item => {
-    const matchesFilter = filter === 'All' || item.category === filter;
+  const filteredItems = allItems.filter(item => {
+    const matchesFilter = filter === 'All' || 
+                         (filter === 'My Sites' && item.category === 'My Site') ||
+                         item.category === filter;
     const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          item.category.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
@@ -186,124 +364,125 @@ const Gallery: React.FC<GalleryProps> = ({ onNavigate, onEditTemplate }) => {
 
   return (
     <div className="min-h-screen flex flex-col pt-32 relative overflow-hidden bg-white">
-      {/* Header - Milestone Style */}
+      {/* Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-[60%] h-[60%] bg-brand-accent/5 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 left-0 w-[60%] h-[60%] bg-brand-pink/5 rounded-full blur-[150px]" />
+      </div>
+
       <div className="container mx-auto px-6 pb-20 relative z-10">
         <div className="max-w-4xl">
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-sm font-bold text-brand-accent mb-6"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3 text-xs font-bold text-brand-accent tracking-[0.3em] uppercase mb-6"
           >
-            SELECTED WORKS
+            <div className="w-12 h-[1px] bg-brand-accent" />
+            Portfolio Archive
           </motion.div>
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-5xl md:text-7xl font-bold text-brand-primary mb-8 leading-[1.1] tracking-tight"
+            className="text-5xl md:text-8xl font-bold text-brand-primary mb-8 leading-[0.9] tracking-tighter"
           >
-            Defining the <br />
-            <span className="brand-gradient-text italic font-light">Digital</span> Standard.
+            THE <br />
+            <span className="brand-gradient-text italic font-light">COLLECTION</span>.
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-xl text-brand-secondary max-w-2xl leading-relaxed"
+            className="text-xl text-brand-secondary max-w-2xl leading-relaxed opacity-70"
           >
-            Explore our curated collection of digital experiences. Each project is a testament to our commitment to precision, elegance, and measurable results.
+            A curated selection of digital masterpieces, each crafted with precision to redefine the boundaries of what's possible online.
           </motion.p>
         </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="sticky top-20 z-30 bg-white/80 backdrop-blur-xl border-y border-black/5 py-6">
-        <div className="container mx-auto px-6 flex flex-wrap items-center justify-between gap-6">
-          <div className="flex items-center gap-8 overflow-x-auto no-scrollbar pb-2 sm:pb-0">
+      <div className="sticky top-20 z-30 apple-blur border-y border-black/5 py-8">
+        <div className="container mx-auto px-6 flex flex-wrap items-center justify-between gap-8">
+          <div className="flex items-center gap-10 overflow-x-auto no-scrollbar pb-2 sm:pb-0">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setFilter(cat)}
-                className={`text-xs font-bold transition-all whitespace-nowrap ${
+                className={`text-[10px] font-bold tracking-[0.2em] uppercase transition-all whitespace-nowrap relative ${
                   filter === cat 
-                    ? 'text-brand-accent border-b-2 border-brand-accent pb-1' 
+                    ? 'text-brand-accent' 
                     : 'text-brand-secondary/40 hover:text-brand-primary'
                 }`}
               >
                 {cat}
+                {filter === cat && (
+                  <motion.div 
+                    layoutId="activeFilter"
+                    className="absolute -bottom-2 left-0 right-0 h-0.5 bg-brand-accent"
+                  />
+                )}
               </button>
             ))}
           </div>
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-brand-secondary/20" size={14} />
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-brand-secondary/30" size={16} />
             <input 
               type="text"
-              placeholder="SEARCH PROJECTS"
+              placeholder="SEARCH THE ARCHIVE"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-6 pr-4 py-2 bg-transparent text-xs font-bold placeholder:text-brand-secondary/20 text-brand-primary focus:outline-none border-b border-black/5 focus:border-brand-accent transition-all"
+              className="w-full pl-8 pr-4 py-3 bg-transparent text-xs font-bold tracking-widest placeholder:text-brand-secondary/30 text-brand-primary focus:outline-none border-b border-black/10 focus:border-brand-accent transition-all"
             />
           </div>
         </div>
       </div>
 
-      {/* Main Content - Grid */}
+      {/* Main Content - Bento Grid */}
       <main className="container mx-auto px-6 py-24 relative z-10">
         <motion.div 
           layout
-          className="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24"
+          className="grid grid-cols-1 md:grid-cols-12 gap-8 md:auto-rows-[400px]"
         >
           <AnimatePresence mode="popLayout">
-            {filteredItems.map((item, index) => (
-              <motion.div
-                layout
-                key={item.id}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: index % 2 * 0.2 }}
-                className="group cursor-pointer"
-                onClick={() => setSelectedItem(item)}
-              >
-                <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden bg-gray-50 mb-8 shadow-xl shadow-black/5 group-hover:shadow-2xl group-hover:shadow-brand-accent/10 transition-all duration-700 border border-black/5">
-                  {projectImages[item.id] ? (
-                    <img src={projectImages[item.id]} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" referrerPolicy="no-referrer" />
-                  ) : (
-                    <TemplateMiniPreview item={item} />
-                  )}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all duration-700"></div>
-                  
-                  {/* Hover Indicator */}
-                  <div className="absolute top-10 right-10 w-16 h-16 bg-brand-accent text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-10 group-hover:translate-x-0">
-                    <ArrowUpRight size={24} />
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="text-xs font-bold text-brand-accent mb-2">{item.category}</div>
-                    <h3 className="text-3xl font-bold text-brand-primary group-hover:text-brand-accent transition-colors">{item.title}</h3>
-                  </div>
-                  <div className="text-xs font-bold text-brand-secondary/40 border border-black/5 px-3 py-1 rounded-full">
-                    VIEW PROJECT
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+            {filteredItems.map((item, index) => {
+              // Create a bento pattern
+              let gridClass = "md:col-span-4";
+              if (index % 5 === 0) gridClass = "md:col-span-8 md:row-span-2";
+              else if (index % 5 === 3) gridClass = "md:col-span-8";
+              
+              return (
+                <GalleryCard
+                  key={item.id}
+                  item={item}
+                  index={index}
+                  image={projectImages[item.id]}
+                  onClick={() => {
+                    if (item.category === 'My Site') {
+                      onNavigate?.('dashboard');
+                    } else {
+                      setSelectedItem(item);
+                    }
+                  }}
+                  className={gridClass}
+                />
+              );
+            })}
           </AnimatePresence>
         </motion.div>
 
-        {/* Empty State */}
         {filteredItems.length === 0 && (
           <div className="text-center py-32">
-            <h3 className="text-3xl font-bold text-brand-primary mb-4">No projects found</h3>
-            <p className="text-brand-secondary leading-relaxed">Try adjusting your search or filter to find what you're looking for.</p>
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8 border border-black/5">
+              <Search className="text-brand-secondary/20" size={32} />
+            </div>
+            <h3 className="text-3xl font-bold text-brand-primary mb-4 tracking-tight">No projects found</h3>
+            <p className="text-brand-secondary leading-relaxed opacity-60">Try adjusting your search or filter to find what you're looking for.</p>
             <button 
               onClick={() => {
                 setFilter('All');
                 setSearchTerm('');
               }}
-              className="mt-8 text-xs font-bold text-brand-accent border-b border-brand-accent pb-1"
+              className="mt-8 text-xs font-bold text-brand-accent border-b border-brand-accent pb-1 hover:border-brand-primary hover:text-brand-primary transition-all"
             >
               Clear all filters
             </button>
@@ -315,37 +494,31 @@ const Gallery: React.FC<GalleryProps> = ({ onNavigate, onEditTemplate }) => {
       <AnimatePresence>
         {selectedItem && (
           <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, scale: 1.1 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            exit={{ opacity: 0, scale: 1.1 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="fixed inset-0 z-[60] bg-white overflow-y-auto"
           >
-             {/* Nav / Controls */}
-             <div className="sticky top-0 z-50 flex items-center justify-between px-10 py-6 bg-white/80 backdrop-blur-xl border-b border-black/5">
+             <div className="sticky top-0 z-50 flex items-center justify-between px-10 py-8 apple-blur border-b border-black/5">
                 <button onClick={() => setSelectedItem(null)} className="flex items-center gap-4 text-brand-primary group">
-                   <div className="w-10 h-10 rounded-full border border-black/10 flex items-center justify-center group-hover:bg-brand-accent group-hover:text-white transition-all">
-                      <ChevronLeft size={18} />
+                   <div className="w-12 h-12 rounded-full border border-black/10 flex items-center justify-center group-hover:bg-brand-primary group-hover:text-white transition-all">
+                      <ChevronLeft size={20} />
                    </div>
-                   <span className="text-xs font-bold">Back to Gallery</span>
+                   <span className="text-[10px] font-bold tracking-widest uppercase">Back to Collection</span>
                 </button>
                 
-                <div className="flex items-center gap-6">
-                  <button 
-                    onClick={() => {
-                      if (onEditTemplate) onEditTemplate(selectedItem.templateId);
-                      setSelectedItem(null);
-                    }}
-                    className="px-8 py-3 bg-brand-accent text-white text-xs font-bold rounded-full hover:opacity-90 transition-all"
-                  >
-                    Edit Template
-                  </button>
-                  <button onClick={() => setSelectedItem(null)} className="p-2 text-brand-secondary/40 hover:text-brand-primary transition-colors">
+                <div className="flex items-center gap-8">
+                  <div className="hidden md:block text-right">
+                    <div className="text-[10px] font-bold text-brand-accent uppercase tracking-widest mb-1">{selectedItem.category}</div>
+                    <div className="text-lg font-bold text-brand-primary tracking-tight">{selectedItem.title}</div>
+                  </div>
+                  <button onClick={() => setSelectedItem(null)} className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-brand-secondary/40 hover:text-brand-primary transition-colors">
                      <X size={24} />
                   </button>
                 </div>
              </div>
 
-             {/* Live Website Content */}
              <div className="min-h-screen">
                 <TemplateRenderer item={selectedItem} />
              </div>
@@ -354,30 +527,40 @@ const Gallery: React.FC<GalleryProps> = ({ onNavigate, onEditTemplate }) => {
       </AnimatePresence>
 
       {/* CTA */}
-      <div className="container mx-auto px-6 py-32 relative z-10">
-        <div className="bg-gray-50 rounded-[4rem] p-16 md:p-24 text-center relative overflow-hidden border border-black/5">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-brand-accent/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-brand-accent-alt/10 rounded-full blur-3xl"></div>
+      <div className="container mx-auto px-6 py-40 relative z-10">
+        <div className="relative rounded-[4rem] p-16 md:p-32 text-center overflow-hidden border border-black/5 shadow-2xl shadow-black/5">
+          <div className="absolute inset-0 bg-gray-50/50 backdrop-blur-3xl -z-10" />
+          <div className="absolute top-0 right-0 w-[50%] h-[50%] bg-brand-accent/5 rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 left-0 w-[50%] h-[50%] bg-brand-pink/5 rounded-full blur-[120px]" />
           
           <div className="relative z-10 max-w-3xl mx-auto">
-            <h2 className="text-4xl md:text-6xl font-bold text-brand-primary mb-8 leading-tight tracking-tight">
-              Ready to create your own <br />
-              <span className="brand-gradient-text italic font-light">Milestone</span>?
-            </h2>
-            <p className="text-xl text-brand-secondary mb-12 leading-relaxed">
-              Partner with us to build a digital presence that doesn't just look beautiful, but performs at the highest level.
-            </p>
-            <button 
-              onClick={() => {
-                if (onNavigate) {
-                  onNavigate('start-project');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-              }}
-              className="px-12 py-6 bg-brand-primary text-white font-bold rounded-full hover:opacity-90 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-brand-primary/10"
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
             >
-              Start Your Project
-            </button>
+              <h2 className="text-5xl md:text-8xl font-bold text-brand-primary mb-10 leading-[0.9] tracking-tighter">
+                READY TO <br />
+                <span className="brand-gradient-text italic font-light">BEGIN</span>?
+              </h2>
+              <p className="text-xl text-brand-secondary mb-16 leading-relaxed opacity-70">
+                Partner with us to build a digital presence that doesn't just look beautiful, but performs at the highest level.
+              </p>
+              <button 
+                onClick={() => {
+                  if (onNavigate) {
+                    onNavigate('start-project');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
+                }}
+                className="group relative px-16 py-8 brand-gradient-bg text-white rounded-full font-bold text-xl shadow-2xl shadow-brand-accent/20 hover:scale-105 transition-all duration-500"
+              >
+                <span className="relative z-10 flex items-center gap-4">
+                  Start Your Project <Zap size={24} className="fill-white" />
+                </span>
+                <div className="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-10 transition-opacity" />
+              </button>
+            </motion.div>
           </div>
         </div>
       </div>

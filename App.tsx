@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import FeaturesGrid from './components/FeaturesGrid';
+import FeatureShowcase from './components/FeatureShowcase';
 import ServicesBento from './components/ServicesBento';
-import WhyChooseUs from './components/WhyChooseUs';
 import HowItWorks from './components/HowItWorks';
+import DeploymentCarousel from './components/DeploymentCarousel';
+import SitePreview from './components/SitePreview';
 import PortfolioDeck from './components/PortfolioDeck';
 import Testimonials from './components/Testimonials';
 import Pricing from './components/Pricing';
+import CTA from './components/CTA';
 import Footer from './components/Footer';
 import Gallery from './components/Gallery';
 import About from './components/About';
@@ -16,9 +18,10 @@ import { Dashboard } from './components/Dashboard';
 import Login from './components/Login';
 import AdminDashboard from './components/AdminDashboard';
 import { PreviewPage } from './components/PreviewPage';
+import Sandbox from './components/Sandbox';
+import { OnboardingWizard } from './components/OnboardingWizard';
 import { Page } from './types';
-import { AuthProvider } from './components/AuthContext';
-import { Key } from 'lucide-react';
+import { AuthProvider, useAuth } from './components/AuthContext';
 
 declare global {
   interface Window {
@@ -29,26 +32,28 @@ declare global {
   }
 }
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
+  const { user, onboardingComplete, loading: authLoading } = useAuth();
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<string>('starter');
   const [hasMaintenance, setHasMaintenance] = useState<boolean>(false);
   const [dashboardProjectId, setDashboardProjectId] = useState<string | null>(null);
+  const [dashboardInitialTab, setDashboardInitialTab] = useState<string | undefined>(undefined);
   const [previewProjectId, setPreviewProjectId] = useState<string | null>(null);
   const [previewInitialProject, setPreviewInitialProject] = useState<any>(null);
   const [previewInitialContent, setPreviewInitialContent] = useState<any>(null);
-  const [hasApiKey, setHasApiKey] = useState<boolean>(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    const checkApiKey = async () => {
-      if (window.aistudio) {
-        const hasKey = await window.aistudio.hasSelectedApiKey();
-        setHasApiKey(hasKey);
-      }
-    };
-    checkApiKey();
+    if (user && !onboardingComplete && !authLoading) {
+      setShowOnboarding(true);
+    } else {
+      setShowOnboarding(false);
+    }
+  }, [user, onboardingComplete, authLoading]);
 
+  useEffect(() => {
     // Check for Stripe redirect
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('session_id');
@@ -65,41 +70,7 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const handleOpenKeySelector = async () => {
-    if (window.aistudio) {
-      await window.aistudio.openSelectKey();
-      setHasApiKey(true); // Assume success to avoid race conditions
-    }
-  };
-
-  const isFullScreenPage = currentPage === 'dashboard' || currentPage === 'login' || currentPage === 'admin-dashboard' || currentPage === 'preview';
-
-  if (!hasApiKey) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-white">
-        <div className="atmosphere opacity-20" />
-        <div className="max-w-md w-full bg-white border border-gray-100 rounded-[2.5rem] p-8 text-center relative z-10 shadow-2xl shadow-black/5">
-          <div className="w-16 h-16 bg-brand-accent/10 text-brand-accent rounded-full flex items-center justify-center mx-auto mb-6">
-            <Key className="w-8 h-8" />
-          </div>
-          <h1 className="text-2xl font-bold text-brand-primary mb-4">API Key Required</h1>
-          <p className="text-brand-secondary mb-8">
-            To provide high-quality AI-generated images, this app requires a Gemini API key. 
-            Please select a key from a paid Google Cloud project to continue.
-          </p>
-          <button
-            onClick={handleOpenKeySelector}
-            className="w-full py-4 brand-gradient-bg text-white rounded-xl font-semibold hover:opacity-90 transition-all shadow-lg shadow-brand-accent/20"
-          >
-            Select API Key
-          </button>
-          <p className="mt-6 text-sm text-brand-secondary/30">
-            Learn more about <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="text-brand-accent hover:underline">Gemini API billing</a>.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const isFullScreenPage = currentPage === 'dashboard' || currentPage === 'login' || currentPage === 'admin-dashboard' || currentPage === 'preview' || currentPage === 'sandbox';
 
   const handlePreview = (projectId: string, initialProject?: any, initialContent?: any) => {
     setPreviewProjectId(projectId);
@@ -108,11 +79,12 @@ const App: React.FC = () => {
     setCurrentPage('preview');
   };
 
+  if (showOnboarding) {
+    return <OnboardingWizard onComplete={() => setShowOnboarding(false)} />;
+  }
+
   return (
-    <AuthProvider>
-      <div className="atmosphere">
-        <div className="atmosphere-extra" />
-      </div>
+    <>
       <div className="flex flex-col min-h-screen w-full overflow-x-hidden font-sans relative z-0">
         {!isFullScreenPage && (
           <Navbar currentPage={currentPage} onNavigate={setCurrentPage} />
@@ -122,13 +94,15 @@ const App: React.FC = () => {
           {currentPage === 'home' && (
             <>
               <Hero onNavigate={setCurrentPage} />
-              <FeaturesGrid />
+              <FeatureShowcase />
               <ServicesBento />
-              <WhyChooseUs />
               <HowItWorks />
+              <DeploymentCarousel />
+              <SitePreview />
               <PortfolioDeck onNavigate={setCurrentPage} />
               <Testimonials />
               <Pricing onNavigate={setCurrentPage} />
+              <CTA onNavigate={setCurrentPage} />
             </>
           )}
           
@@ -157,7 +131,10 @@ const App: React.FC = () => {
                 onPreview={(project, content) => handlePreview('', project, content)}
                 onPlanSelect={setSelectedPlanId}
                 onMaintenanceSelect={setHasMaintenance}
-                onProjectCreate={setDashboardProjectId}
+                onProjectCreate={(id) => {
+                  setDashboardProjectId(id);
+                  setDashboardInitialTab('launch');
+                }}
                 initialTemplateId={selectedTemplateId || undefined}
               />
             </>
@@ -179,6 +156,7 @@ const App: React.FC = () => {
                 hasMaintenance={hasMaintenance}
                 initialProjectId={dashboardProjectId}
                 onProjectSelect={setDashboardProjectId}
+                initialTab={dashboardInitialTab}
               />
             </>
           )}
@@ -189,6 +167,15 @@ const App: React.FC = () => {
               initialProject={previewInitialProject}
               initialContent={previewInitialContent}
               onBack={() => setCurrentPage(previewProjectId ? 'dashboard' : 'start-project')} 
+              onLaunch={() => {
+                if (previewProjectId) {
+                  setDashboardProjectId(previewProjectId);
+                  setDashboardInitialTab('launch');
+                  setCurrentPage('dashboard');
+                } else {
+                  setCurrentPage('start-project');
+                }
+              }}
             />
           )}
 
@@ -197,10 +184,22 @@ const App: React.FC = () => {
               <AdminDashboard onNavigate={setCurrentPage} />
             </>
           )}
+
+          {currentPage === 'sandbox' && (
+            <Sandbox onNavigate={setCurrentPage} />
+          )}
         </main>
         
         {!isFullScreenPage && <Footer />}
       </div>
+    </>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
     </AuthProvider>
   );
 };

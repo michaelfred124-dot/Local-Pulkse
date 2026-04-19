@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { doc, onSnapshot, collection, query, where, getDocs } from 'firebase/firestore';
-import { ArtisanBakery } from './templates/ArtisanBakery';
-import { ModernDental } from './templates/ModernDental';
-import { SparkleClean } from './templates/SparkleClean';
-import { PetParadise } from './templates/PetParadise';
-import { LegalLink } from './templates/LegalLink';
-import { ZenYoga } from './templates/ZenYoga';
-import { DefaultTemplate } from './templates/DefaultTemplate';
-import { UrbanFit } from './templates/UrbanFit';
+import { TemplateRenderer } from './TemplateRenderer';
 import { Loader2, ArrowLeft, Monitor, Smartphone, X, Zap, Shield, Globe } from 'lucide-react';
 import { Page, PortfolioItem } from '../types';
 
@@ -78,7 +71,8 @@ export const PreviewPage: React.FC<PreviewPageProps> = ({ projectId, initialProj
 
   const previewItem: PortfolioItem = {
     id: 0,
-    title: project.businessName || 'Your Brand',
+    templateId: project.templateId || project.vibe,
+    title: project.businessName || project.name || 'Your Brand',
     category: project.industry || 'Industry',
     imageUrl: content?.heroImage || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80',
     heroHeadline: content?.heroHeadline,
@@ -86,6 +80,11 @@ export const PreviewPage: React.FC<PreviewPageProps> = ({ projectId, initialProj
     aboutText: content?.aboutText,
     contactEmail: content?.contactEmail,
     contactPhone: content?.contactPhone,
+    logo: content?.logo,
+    location: content?.location,
+    vibe: content?.vibe,
+    servicesText: content?.servicesText || content?.services,
+    socialLinks: content?.socialLinks,
     services: [
       { title: "Core Service 1", description: "Tailored solutions for your specific needs.", price: "Learn More" },
       { title: "Core Service 2", description: "Advanced capabilities to drive growth.", price: "Learn More" },
@@ -105,22 +104,6 @@ export const PreviewPage: React.FC<PreviewPageProps> = ({ projectId, initialProj
       { question: "How do we get started?", answer: "Simply reach out through our contact form." },
       { question: "What is your pricing model?", answer: "We offer flexible plans tailored to your needs." }
     ]
-  };
-
-  const renderTemplate = () => {
-    const templateId = project.templateId || project.vibe;
-    switch(templateId) {
-      case 'bakery': return <ArtisanBakery content={previewItem} />;
-      case 'dental': return <ModernDental content={previewItem} />;
-      case 'cleaning': return <SparkleClean content={previewItem} />;
-      case 'pet': return <PetParadise content={previewItem} />;
-      case 'legal': return <LegalLink item={previewItem} />;
-      case 'yoga': 
-      case 'organic': return <ZenYoga item={previewItem} />;
-      case 'brutalist': return <UrbanFit item={previewItem} />;
-      case 'tech': return <DefaultTemplate item={previewItem} />;
-      default: return <DefaultTemplate item={previewItem} />;
-    }
   };
 
   return (
@@ -171,7 +154,7 @@ export const PreviewPage: React.FC<PreviewPageProps> = ({ projectId, initialProj
             : 'w-full min-h-full rounded-xl overflow-hidden border border-white/5'
         }`}>
           <div className="h-full overflow-y-auto scrollbar-hide">
-            {renderTemplate()}
+            <TemplateRenderer item={previewItem} />
           </div>
         </div>
       </div>

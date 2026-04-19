@@ -31,7 +31,8 @@ const AdminProjects: React.FC = () => {
       case 'launch': return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'revisions': return 'bg-amber-100 text-amber-700 border-amber-200';
       case 'design': return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'discovery': return 'bg-slate-100 text-slate-700 border-slate-200';
+      case 'discovery': return 'bg-blue-50 text-blue-700 border-blue-100';
+      case 'payment-pending': return 'bg-red-50 text-red-700 border-red-100';
       default: return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
@@ -39,7 +40,10 @@ const AdminProjects: React.FC = () => {
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
       const projectRef = doc(db, 'projects', id);
-      await updateDoc(projectRef, { status: newStatus });
+      await updateDoc(projectRef, { 
+        status: newStatus,
+        updatedAt: new Date().toISOString()
+      });
     } catch (error) {
       console.error("Error updating project status:", error);
       alert("Failed to update status.");
@@ -99,7 +103,7 @@ const AdminProjects: React.FC = () => {
                   className="group"
                 >
                   <td className="px-6 py-4">
-                    <div className="font-bold text-slate-900">{project.businessName || 'Untitled Project'}</div>
+                    <div className="font-bold text-slate-900">{project.name || 'Untitled Project'}</div>
                     <div className="text-xs text-slate-400">{project.clientId}</div>
                   </td>
                   <td className="px-6 py-4">
@@ -108,6 +112,7 @@ const AdminProjects: React.FC = () => {
                       onChange={(e) => handleStatusChange(project.id, e.target.value)}
                       className={`text-xs font-bold px-3 py-1 rounded-full border outline-none cursor-pointer ${getStatusColor(project.status || 'discovery')}`}
                     >
+                      <option value="payment-pending">Payment Pending</option>
                       <option value="discovery">Discovery</option>
                       <option value="design">Design</option>
                       <option value="revisions">Revisions</option>

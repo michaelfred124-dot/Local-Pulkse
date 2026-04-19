@@ -1,8 +1,10 @@
 import { GoogleGenAI } from "@google/genai";
+import { storage } from "../../firebase";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 // Simple concurrency queue
 let activeRequests = 0;
-const MAX_CONCURRENT_REQUESTS = 2;
+const MAX_CONCURRENT_REQUESTS = 1;
 const requestQueue: (() => void)[] = [];
 
 const acquireToken = async () => {
@@ -36,59 +38,95 @@ export const generateImage = async (prompt: string, aspectRatio: "1:1" | "3:4" |
 
     const ai = new GoogleGenAI({ apiKey });
 
-    let retries = 3;
-    let delay = 2000; // Start with a longer delay
+    let retries = 5;
+    let delay = 3000; // Start with a longer delay
 
     // gemini-2.5-flash-image only supports these aspect ratios
     const validAspectRatios = ["1:1", "3:4", "4:3", "9:16", "16:9"];
     const safeAspectRatio = validAspectRatios.includes(aspectRatio) ? aspectRatio : "16:9";
 
+    const models = [
+      'gemini-2.5-flash-image', 
+      'gemini-3.1-flash-image-preview', 
+      'gemini-3-pro-image-preview'
+    ];
+    let currentModelIndex = 0;
+
     while (retries > 0) {
       try {
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash-image',
-          contents: {
-            parts: [
-              {
-                text: prompt,
-              },
-            ],
-          },
-          config: {
-            imageConfig: {
+        const currentModel = models[currentModelIndex];
+        
+        // Handle Imagen models differently as they use generateImages instead of generateContent
+        if (currentModel.startsWith('imagen')) {
+          const response = await ai.models.generateImages({
+            model: currentModel,
+            prompt: prompt,
+            config: {
+              numberOfImages: 1,
               aspectRatio: safeAspectRatio as any,
+              outputMimeType: 'image/png',
             },
-          },
-        });
+          });
 
-        for (const part of response.candidates?.[0]?.content?.parts || []) {
-          if (part.inlineData) {
-            return `data:image/png;base64,${part.inlineData.data}`;
+          if (response.generatedImages?.[0]?.image?.imageBytes) {
+            return `data:image/png;base64,${response.generatedImages[0].image.imageBytes}`;
+          }
+        } else {
+          // Nano Banana models use generateContent
+          const response = await ai.models.generateContent({
+            model: currentModel,
+            contents: {
+              parts: [{ text: prompt }],
+            },
+            config: {
+              imageConfig: {
+                aspectRatio: safeAspectRatio as any,
+                ...(currentModel.includes('3.1') ? { imageSize: "1K" as any } : {}),
+              },
+            },
+          });
+
+          for (const part of response.candidates?.[0]?.content?.parts || []) {
+            if (part.inlineData) {
+              return `data:image/png;base64,${part.inlineData.data}`;
+            }
           }
         }
         
-        // If we got a successful response but no image, break out of retry loop
         break;
       } catch (error: any) {
-        console.error(`Error generating image (retries left: ${retries - 1}):`, error);
+        // Handle permission, quota, and not found errors immediately and silently if we have fallbacks
+        const errorString = typeof error === 'string' ? error : (error?.message || JSON.stringify(error));
         
-        // Handle permission errors immediately, don't retry
-        if (error?.message?.includes("403") || error?.status === "PERMISSION_DENIED") {
-          console.warn("Permission denied for image generation. The selected API key might not have access to this model.");
-          break;
+        const isNotFoundError = errorString.includes("NOT_FOUND") || errorString.includes("404") || errorString.includes("not found");
+        const isInternalError = errorString.includes("INTERNAL") || errorString.includes("500") || errorString.includes("Internal Server Error");
+        const isUnavailableError = errorString.includes("UNAVAILABLE") || errorString.includes("503") || errorString.includes("Deadline expired");
+        const isQuotaError = errorString.includes("RESOURCE_EXHAUSTED") || errorString.includes("429");
+        const isPermissionError = errorString.includes("PERMISSION_DENIED") || errorString.includes("403") || errorString.includes("permission");
+
+        // If it's an error we can potentially fix by switching models, do it
+        if (isNotFoundError || isInternalError || isUnavailableError || isQuotaError || isPermissionError) {
+          if (currentModelIndex < models.length - 1) {
+            console.warn(`Model ${models[currentModelIndex]} failed. Switching to fallback: ${models[currentModelIndex + 1]}`);
+            currentModelIndex++;
+            // Reset retries for the new model
+            retries = 3; 
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          } else {
+            // No more fallbacks, and retrying a permission/not found error won't help
+            console.warn(`Could not generate image with ${models[currentModelIndex]} (or fallbacks). Using placeholder. Error:`, errorString);
+            break;
+          }
         }
+
+        console.warn(`Error generating image with ${models[currentModelIndex]} (retries left: ${retries - 1}):`, errorString);
         
         retries--;
-        if (retries === 0) {
-          if (error?.message?.includes("429") || error?.status === "RESOURCE_EXHAUSTED") {
-            console.warn("Quota exceeded for image generation. Consider selecting a paid API key.");
-          }
-          break;
-        }
+        if (retries === 0) break;
         
-        // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, delay));
-        delay *= 2; // Exponential backoff
+        delay *= 2; // More aggressive backoff
       }
     }
     
@@ -97,4 +135,27 @@ export const generateImage = async (prompt: string, aspectRatio: "1:1" | "3:4" |
   } finally {
     releaseToken();
   }
+};
+
+export const uploadToFirebase = async (file: File, onProgress?: (progress: number) => void): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const storageRef = ref(storage, `uploads/${Date.now()}_${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        if (onProgress) onProgress(progress);
+      },
+      (error) => {
+        console.error("Upload error:", error);
+        reject(error);
+      },
+      async () => {
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        resolve(downloadURL);
+      }
+    );
+  });
 };

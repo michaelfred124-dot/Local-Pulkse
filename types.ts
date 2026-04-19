@@ -1,6 +1,6 @@
 import { LucideIcon } from "lucide-react";
 
-export type Page = 'home' | 'gallery' | 'about' | 'start-project' | 'dashboard' | 'login' | 'admin-dashboard' | 'preview';
+export type Page = 'home' | 'gallery' | 'about' | 'start-project' | 'dashboard' | 'login' | 'admin-dashboard' | 'preview' | 'sandbox';
 
 export interface NavItem {
   label: string;
@@ -19,7 +19,7 @@ export interface ServiceItem {
 }
 
 export interface PortfolioItem {
-  id: number;
+  id: number | string;
   templateId?: string;
   title: string;
   category: string;
@@ -52,10 +52,14 @@ export interface PortfolioItem {
   vibe?: string;
   servicesText?: string;
   socialLinks?: string;
+  deploymentStatus?: 'draft' | 'deploying' | 'live' | 'failed';
+  deployedUrl?: string;
+  customDomain?: string;
+  dnsRecords?: { type: string; name: string; value: string; status: 'pending' | 'verified' }[];
 }
 
 export interface Testimonial {
-  id: number;
+  id: number | string;
   name: string;
   role: string;
   company: string;
