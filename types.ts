@@ -23,6 +23,7 @@ export interface PortfolioItem {
   templateId?: string;
   title: string;
   category: string;
+  description?: string;
   imageUrl?: string;
   prompt?: string;
   hours?: string[];

@@ -72,7 +72,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
             }}
             className="w-full sm:w-auto px-8 py-4 bg-[#1d1d1f] text-white font-semibold rounded-full transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-lg tracking-tight"
           >
-            Try Now
+            Live Sandbox
           </motion.button>
           
           <motion.button

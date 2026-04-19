@@ -1,7 +1,9 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { PageSchema, PageBlock } from './types';
 import { motion } from 'motion/react';
 import { useBuilderStore } from './store';
+import { RenderChaiBlocks } from "@chaibuilder/sdk/render";
+import { registerCustomBlocks } from "../chai/chai-setup";
 
 const EditorContext = createContext<{ isEditing: boolean, onContentChange?: (field: string, value: string) => void }>({ isEditing: false });
 
@@ -18,6 +20,27 @@ export const VisualRenderer: React.FC<VisualRendererProps> = ({
   onBlockClick,
   onContentChange
 }) => {
+  useEffect(() => {
+    registerCustomBlocks();
+  }, []);
+
+  if (schema.chaiBlocks && schema.chaiBlocks.length > 0) {
+    return (
+      <div 
+        className="w-full min-h-screen bg-white"
+        style={{ 
+          fontFamily: schema.globalStyle?.fontFamily || 'Inter, sans-serif',
+          '--color-brand-accent': schema.globalStyle?.primaryColor || '#0066cc'
+        } as any}
+      >
+        <RenderChaiBlocks 
+            blocks={schema.chaiBlocks} 
+            lang="en" 
+        />
+      </div>
+    );
+  }
+
   return (
     <div 
       className="w-full min-h-screen bg-white"

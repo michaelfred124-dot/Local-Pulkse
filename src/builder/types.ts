@@ -35,7 +35,10 @@ export interface PageBlock {
 export interface PageSchema {
   id: string;
   name: string;
-  blocks: PageBlock[];
+  blocks: PageBlock[]; // for backward compatibility
+  chaiBlocks?: any[];  // new Chai format
+  designTokens?: any; // for Chai design tokens
+  theme?: any;       // for Chai theme
   globalStyle?: {
     fontFamily?: string;
     primaryColor?: string;

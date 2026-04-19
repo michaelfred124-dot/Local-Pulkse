@@ -367,7 +367,7 @@ const StartProject: React.FC<StartProjectProps> = ({ onNavigate, onPreview, onPl
         heroHeadline: formData.heroHeadline || `Welcome to ${formData.company}`,
         heroSubheadline: formData.heroSubheadline || `We are a leading ${formData.industry} company.`,
         aboutText: formData.aboutText || `Learn more about our services and how we can help you achieve your goals.`,
-        servicesText: formData.servicesText || formData.services || '',
+        servicesText: formData.services || '',
         heroImage: formData.heroImage || TEMPLATES.find(t => t.id === formData.templateId)?.image || '',
         logo: formData.logo || '',
         location: formData.location || '',

@@ -111,7 +111,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
               }}
               className="px-5 py-2.5 bg-[#0066cc] text-white text-sm font-semibold rounded-full hover:bg-[#005bb5] transition-colors shadow-sm"
             >
-              Try Now
+              Live Sandbox
             </button>
             
             {/* Mobile Menu Toggle */}
@@ -154,7 +154,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate }) => {
                   window.scrollTo({ top: 0, behavior: 'instant' });
                 }}
               >
-                Try Now
+                Live Sandbox
               </button>
             </div>
           </motion.div>

@@ -18,7 +18,7 @@ const EditableText: React.FC<EditableTextProps> = ({
   isEditing, 
   className = '', 
   multiline = false,
-  tag: Tag = 'div'
+  tag: Tag = 'div' as any
 }) => {
   const [isFocused, setIsFocused] = React.useState(false);
   const textRef = React.useRef<HTMLElement>(null);
@@ -27,14 +27,16 @@ const EditableText: React.FC<EditableTextProps> = ({
     return <Tag className={className} dangerouslySetInnerHTML={{ __html: value.replace(/\n/g, '<br/>') }} />;
   }
 
+  const CustomTag = Tag as any;
+
   return (
     <div className={`relative group/editable ${className}`}>
-      <Tag
-        ref={textRef}
+      <CustomTag
+        ref={textRef as any}
         contentEditable
         suppressContentEditableWarning
         onFocus={() => setIsFocused(true)}
-        onBlur={(e) => {
+        onBlur={(e: any) => {
           setIsFocused(false);
           const newValue = e.currentTarget.innerText;
           if (newValue !== value) {
@@ -44,7 +46,7 @@ const EditableText: React.FC<EditableTextProps> = ({
         className={`outline-none focus:ring-2 focus:ring-blue-400/50 rounded-md transition-all px-1 -mx-1 min-h-[1em] min-w-[50px] ${isFocused ? 'bg-blue-50/80 shadow-inner' : 'hover:bg-blue-50/30'}`}
       >
         {value || (isEditing ? 'Click to add text...' : '')}
-      </Tag>
+      </CustomTag>
       {!isFocused && (
         <div className="absolute -top-6 left-0 opacity-0 group-hover/editable:opacity-100 transition-opacity pointer-events-none z-50">
           <div className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 shadow-lg whitespace-nowrap">

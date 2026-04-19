@@ -167,15 +167,6 @@ const AppContent: React.FC = () => {
               initialProject={previewInitialProject}
               initialContent={previewInitialContent}
               onBack={() => setCurrentPage(previewProjectId ? 'dashboard' : 'start-project')} 
-              onLaunch={() => {
-                if (previewProjectId) {
-                  setDashboardProjectId(previewProjectId);
-                  setDashboardInitialTab('launch');
-                  setCurrentPage('dashboard');
-                } else {
-                  setCurrentPage('start-project');
-                }
-              }}
             />
           )}
 

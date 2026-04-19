@@ -18,7 +18,7 @@ const EditableText: React.FC<EditableTextProps> = ({
   isEditing, 
   className = '', 
   multiline = false,
-  tag: Tag = 'div'
+  tag: Tag = 'div' as any
 }) => {
   const [isFocused, setIsFocused] = React.useState(false);
   const textRef = React.useRef<HTMLElement>(null);
@@ -27,13 +27,15 @@ const EditableText: React.FC<EditableTextProps> = ({
     return <Tag className={className} dangerouslySetInnerHTML={{ __html: value.replace(/\n/g, '<br/>') }} />;
   }
 
+  const CustomTag = Tag as any;
+
   return (
     <div className={`relative group/text ${isFocused ? 'ring-2 ring-brand-accent ring-offset-2 rounded' : ''}`}>
-      <Tag
+      <CustomTag
         ref={textRef as any}
         contentEditable
         suppressContentEditableWarning
-        onBlur={(e) => {
+        onBlur={(e: any) => {
           setIsFocused(false);
           onSave(e.currentTarget.innerText);
         }}

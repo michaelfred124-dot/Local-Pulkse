@@ -52,17 +52,25 @@ const CTA: React.FC<CTAProps> = ({ onNavigate }) => {
           Join thousands of creators and businesses building their digital presence on our platform.
         </motion.p>
 
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => onNavigate('start-project')}
-          className="group relative px-10 py-4 bg-[#1d1d1f] text-white font-semibold rounded-full overflow-hidden transition-all shadow-lg hover:bg-[#1d1d1f]/90"
-        >
-          <span className="relative flex items-center justify-center gap-2 text-base">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => onNavigate('start-project')}
+            className="w-full sm:w-auto px-10 py-4 bg-[#1d1d1f] text-white font-semibold rounded-full shadow-lg hover:bg-[#1d1d1f]/90 transition-all flex items-center justify-center gap-2"
+          >
             Start Building Free
-            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-300" />
-          </span>
-        </motion.button>
+            <ArrowRight size={18} />
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => onNavigate('sandbox')}
+            className="w-full sm:w-auto px-10 py-4 bg-transparent border-2 border-[#1d1d1f] text-[#1d1d1f] font-semibold rounded-full hover:bg-[#1d1d1f] hover:text-white transition-all"
+          >
+            Try Live Sandbox
+          </motion.button>
+        </div>
       </div>
     </section>
   );

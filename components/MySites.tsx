@@ -47,7 +47,15 @@ export const MySites: React.FC<MySitesProps> = ({ onNavigate, onSelectProject })
       <div className="flex justify-between items-center mb-12">
         <div>
           <h1 className="text-4xl font-bold text-brand-primary mb-2">My Sites</h1>
-          <p className="text-brand-secondary">Manage and edit your digital presence.</p>
+          <div className="flex items-center gap-4">
+            <p className="text-brand-secondary">Manage and edit your digital presence.</p>
+            <button 
+              onClick={() => onNavigate('sandbox')}
+              className="text-xs font-bold text-brand-accent hover:underline flex items-center gap-1"
+            >
+              Enter Sandbox Mode →
+            </button>
+          </div>
         </div>
         <button 
           onClick={() => onNavigate('start-project')}
