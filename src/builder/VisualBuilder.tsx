@@ -10,12 +10,13 @@ import { Smartphone, Tablet, Monitor, Rocket, Loader2 } from 'lucide-react';
 interface VisualBuilderProps {
   initialSchema?: PageSchema;
   onChange?: (schema: PageSchema) => void;
+  onExit?: () => void;
 }
 
 // Global flag to ensure one-time registration
 let isChaiSDKReady = false;
 
-const VisualBuilder: React.FC<VisualBuilderProps> = ({ initialSchema, onChange }) => {
+const VisualBuilder: React.FC<VisualBuilderProps> = ({ initialSchema, onChange, onExit }) => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -143,7 +144,15 @@ const VisualBuilder: React.FC<VisualBuilderProps> = ({ initialSchema, onChange }
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-white">
+    <div className="w-full h-full flex flex-col bg-white overflow-hidden relative">
+      {onExit && (
+        <button 
+          onClick={onExit}
+          className="absolute z-[9999] bottom-6 right-6 px-5 py-2.5 bg-slate-900 border border-white/20 text-white rounded-xl shadow-2xl font-bold flex items-center gap-2 hover:bg-slate-800 hover:scale-105 transition-all text-sm"
+        >
+          Exit Builder
+        </button>
+      )}
       <ChaiBuilderEditor
         blocks={initialSchema?.chaiBlocks || []}
         designTokens={initialSchema?.designTokens}

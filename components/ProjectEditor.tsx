@@ -2161,6 +2161,18 @@ export const ProjectEditor: React.FC<DashboardProps> = ({ onNavigate, onPreview,
     }
   };
 
+  if (activeTab === 'editor' && editorMode === 'advanced') {
+    return (
+      <div className="fixed inset-0 z-[100] bg-white">
+        <VisualBuilder 
+          initialSchema={editorContent.builderSchema}
+          onChange={(schema) => setEditorContent(prev => ({ ...prev, builderSchema: schema }))}
+          onExit={() => setEditorMode('simple')}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-brand-bg flex font-sans text-brand-primary">
       
