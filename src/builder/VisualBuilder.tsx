@@ -24,14 +24,16 @@ const VisualBuilder: React.FC<VisualBuilderProps> = ({ initialSchema, onChange }
       registerCustomBlocks();
 
       // Register a custom brand logo in the top bar
-      registerChaiTopBar(() => (
-        <div className="flex items-center gap-2 px-4 h-full border-r border-gray-200 mr-4">
-          <div className="w-6 h-6 bg-[#1d1d1f] rounded flex items-center justify-center text-white">
-            <Rocket size={12} />
+      const TopBarLogo = React.forwardRef<HTMLDivElement, any>((props, ref) => (
+        <div ref={ref} {...props} className="flex items-center gap-3 px-6 h-full border-r border-[#e5e5e5] mr-2 bg-[#fdfdfd]">
+          <div className="w-7 h-7 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white shadow-sm ring-1 ring-black/5">
+            <Rocket size={14} className="text-white drop-shadow-sm" />
           </div>
-          <span className="text-sm font-bold tracking-tight text-[#1d1d1f]">wollo</span>
+          <span className="text-[15px] font-bold tracking-tight text-gray-900 font-sans">CMS Builder</span>
         </div>
       ));
+      TopBarLogo.displayName = "TopBarLogo";
+      registerChaiTopBar(TopBarLogo);
       
       // Media Manager using Firebase
       registerChaiMediaManager(({ onSelect, close }) => {

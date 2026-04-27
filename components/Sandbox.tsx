@@ -30,11 +30,13 @@ const Sandbox: React.FC<SandboxProps> = ({ onNavigate }) => {
           Create Real Project
         </button>
       </div>
-      <div className="flex-grow relative bg-gray-50 overflow-hidden">
-        <VisualBuilder 
-          initialSchema={schema} 
-          onChange={setSchema}
-        />
+      <div className="flex-grow relative bg-gray-50 overflow-hidden p-6 sm:p-10">
+        <div className="w-full h-full bg-white relative overflow-hidden rounded-2xl border border-gray-200 shadow-xl">
+          <VisualBuilder 
+            initialSchema={schema} 
+            onChange={setSchema}
+          />
+        </div>
       </div>
     </div>
   );

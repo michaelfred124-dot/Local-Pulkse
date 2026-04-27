@@ -39,6 +39,8 @@ export interface PageSchema {
   chaiBlocks?: any[];  // new Chai format
   designTokens?: any; // for Chai design tokens
   theme?: any;       // for Chai theme
+  plasmicProjectId?: string; // for plasmic integration
+  plasmicApiToken?: string;  // for plasmic integration
   globalStyle?: {
     fontFamily?: string;
     primaryColor?: string;
